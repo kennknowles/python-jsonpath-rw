@@ -1,0 +1,11 @@
+*.pyc
+*~
+
+# Emacs
+\#(
+.\#*
+
+# Built artifacts
+/README.txt
+/dist
+/*.egg-info
