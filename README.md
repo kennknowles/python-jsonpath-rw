@@ -24,6 +24,7 @@ not they are contained in brackets.
 
 Atomic expressions:
 
+Syntax                        | Meaning
 ------------------------------|-------------------
 `$`                           | The root object
 _field_                       | Specified field(s), described below
@@ -32,15 +33,19 @@ _field_                       | Specified field(s), described below
 
 Jsonpath operators:
 
+Syntax                                 | Meaning
 ---------------------------------------|---------------------------------------------------------------------
 _jsonpath1_ `.` _jsonpath2_            | All nodes matched by _jsonpath2_ starting at any node matching _jsonpath1_
 _jsonpath_ `[` _whatever_ `]`          | Same as _jsonpath_`.`_whatever_
 _jsonpath1_ `..`	 _jsonpath2_       | All nodes matched by _jsonpath2_ that descend from any node matching _jsonpath1_
 _jsonpath1_ `where` _jsonpath2_        | Any nodes matching _jsonpath1_ with a child matching _jsonpath2_
-_jsonpath1_ `|` _jsonpath2_            | Any node matching either _jsonpath1_ or _jsonpath2_
 
-Field specifiers (_field_):
+Also _jsonpath1_ `|` _jsonpath2_ for union (but I have not convinced Github-Flavored Markdown to allow
+me to put that in a table)
 
+Field specifiers ( _field_ ):
+
+Syntax                      | Meaning
 ----------------------------|----------------------------------------
 `fieldname`                 | the field `fieldname` (from the "current" object)
 `"fieldname"`               | same as above, for allowing special characters in the fieldname
@@ -48,8 +53,9 @@ Field specifiers (_field_):
 `*`	                        | any field
 _field_ `,` _field_         | either of the named fields (you can always build equivalent jsonpath using `|`)
 
-Array specifiers (_idx_):
+Array specifiers ( _idx_ ):
 
+Syntax                                 | Meaning
 ---------------------------------------|----------------------------------------
  - `[`_n_`]`                           | array index (may be comma-separated list)
  - `[`_start_`?:`_end_`?]`             | array slicing (note that _step_ is unimplemented only due to lack of need thus far)
