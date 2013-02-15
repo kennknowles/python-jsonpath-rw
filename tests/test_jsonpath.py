@@ -31,11 +31,13 @@ class TestJsonPath(unittest.TestCase):
 
     def test_slice(self):
         self.check_cases([('[*]', [1, 2, 3], [1, 2, 3]),
+                          ('[*]', xrange(1, 4), [1, 2, 3]),
                           ('[1:]', [1, 2, 3, 4], [2, 3, 4]),
                           ('[:2]', [1, 2, 3, 4], [1, 2])])
 
     def test_child(self):
         self.check_cases([('foo.baz', {'foo': {'baz': 3}}, [3]),
+                          ('foo.baz', {'foo': {'baz': [3]}}, [[3]]),
                           ('foo.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
 
     def test_descendants(self):

@@ -1,4 +1,5 @@
 import logging
+import six
 from itertools import *
 
 logger = logging.getLogger(__name__)
@@ -265,11 +266,19 @@ class Slice(JSONPath):
         self.step = step
     
     def find(self, data):
-        # Here's the hack. If not a list, try again as though it were.
-        if not isinstance(data, list):
+        # Here's the hack. If it is a dictionary or some kind of constant,
+        # put it in a single-element list
+        if (isinstance(data, dict) or isinstance(data, six.integer_types) 
+                                   or isinstance(data, six.string_types)):
+
             return self.find([data])
 
-        return data[self.start:self.end:self.step]
+        # Some iterators do not support slicing but we can still
+        # at least work for '*'
+        if self.start == None and self.end == None and self.step == None:
+            return data
+        else:
+            return data[self.start:self.end:self.step]
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:

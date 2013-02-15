@@ -17,5 +17,5 @@ setuptools.setup(
     long_description=open('README.txt').read(),
     packages = ['jsonpath_rw'],
     test_suite = 'tests',
-    install_requires = [ 'ply', 'decorator' ],
+    install_requires = [ 'ply', 'decorator', 'six' ],
 )
