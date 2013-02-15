@@ -8,7 +8,7 @@ if not os.path.exists('README.txt'):
 
 setuptools.setup(
     name='jsonpath-rw',
-    version='0.1',
+    version='0.2',
     description='A robust and extended implementation of JSONPath with read and update capability, and a clear AST',
     author='Kenneth Knowles',
     author_email='kenn.knowles@gmail.com',
