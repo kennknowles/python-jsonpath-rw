@@ -157,7 +157,7 @@ class Descendants(JSONPath):
                                      for i in xrange(0, len(data))]
 
             elif isinstance(data, dict):
-                recursive_matches = [submatch.in_context(Fields([field]))
+                recursive_matches = [submatch.in_context(Fields(field))
                                      for field in data.keys()
                                      for submatch in match_recursively(data[field])]
 
@@ -242,11 +242,11 @@ class Fields(JSONPath):
     def find(self, data):
         if '*' in self.fields:
             try:
-                return [DatumAtPath(data[field], path=Fields([field])) for field in data.keys()]
+                return [DatumAtPath(data[field], path=Fields(field)) for field in data.keys()]
             except AttributeError:
                 return []
         else:
-            result = [DatumAtPath(val, path=Fields([field]))
+            result = [DatumAtPath(val, path=Fields(field))
                       for field, val in [(field, self.safe_get(data, field)) for field in self.fields]
                       if val is not None]
 
@@ -279,6 +279,9 @@ class Index(JSONPath):
 
     def __eq__(self, other):
         return isinstance(other, Index) and self.index == other.index
+
+    def __str__(self):
+        return '[%i]' % self.index
 
 class Slice(JSONPath):
     """
