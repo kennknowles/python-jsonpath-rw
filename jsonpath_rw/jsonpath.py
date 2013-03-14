@@ -12,12 +12,43 @@ class JSONPath(object):
     """
 
     def find(self, data):
-        "All JSONPath"
+        """
+        All `JSONPath` types support `find()`, which returns an iterable of `DatumAtPath`s.
+        They keep track of the path followed to the current location, so if the calling code
+        has some opinion about that, it can be passed in here as a starting point.
+        """
         raise NotImplementedError()
 
     def update(self, data, val):
         "Returns `data` with the specified path replaced by `val`"
         raise NotImplementedError()
+
+class DatumAtPath(object):
+    """
+    Represents a single datum along with the path followed to locate it.
+
+    For quick-and-dirty work, this proxies any non-special attributes
+    to the underlying datum, but the actual datum can (and usually should)
+    be retrieved via the `value` attribute.
+
+    To place `datum` within a path, use `datum.in_context(path)`, which prepends
+    `path` to that already stored.
+    """
+    def __init__(self, value, path):
+        self.value = value
+        self.path = path
+
+    def __getattr__(self, attr):
+        if attr == 'id' and not hasattr(self.value, 'id'):
+            return str(self.path)
+        else:
+            return getattr(self.value, attr)
+
+    def __str__(self):
+        return str(self.value)
+
+    def in_context(self, context_path):
+        return DatumAtPath(self.value, path=self.path if isinstance(context_path, This) else Child(context_path, self.path))
 
 class Root(JSONPath):
     """
@@ -28,7 +59,7 @@ class Root(JSONPath):
     """
 
     def find(self, data):
-        return [data] 
+        return [DatumAtPath(data, path=Root())]
 
     def update(self, data, val):
         return val
@@ -42,7 +73,7 @@ class This(JSONPath):
     """
 
     def find(self, data):
-        return [data]
+        return [DatumAtPath(data, path=This())]
 
     def update(self, data, val):
         return val
@@ -61,7 +92,9 @@ class Child(JSONPath):
         self.right = right
 
     def find(self, data):
-        return chain(*[self.right.find(subdata) for subdata in self.left.find(data)])
+        return [submatch.in_context(subdata.path)
+                for subdata in self.left.find(data)
+                for submatch in self.right.find(subdata.value)]
 
     def __eq__(self, other):
         return isinstance(other, Child) and self.left == other.left and self.right == other.right
@@ -119,16 +152,24 @@ class Descendants(JSONPath):
 
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
             if isinstance(data, list):
-                recursive_matches = chain(*[match_recursively(subdata) for subdata in data])
+                recursive_matches = [submatch.in_context(Index(i))
+                                     for submatch in match_recursively(data[i])
+                                     for i in xrange(0, len(data))]
+
             elif isinstance(data, dict):
-                recursive_matches = chain(*[match_recursively(subdata) for subdata in data.values()])
+                recursive_matches = [submatch.in_context(Fields([field]))
+                                     for field in data.keys()
+                                     for submatch in match_recursively(data[field])]
+
             else:
                 recursive_matches = []
 
             return right_matches + list(recursive_matches)
                 
         # TODO: repeatable iterator instead of list?
-        return list(chain(*[match_recursively(left_match) for left_match in left_matches]))
+        return [submatch.in_context(left_match.path)
+                for left_match in left_matches
+                for submatch in match_recursively(left_match.value)]
             
     def is_singular():
         return False
@@ -201,11 +242,15 @@ class Fields(JSONPath):
     def find(self, data):
         if '*' in self.fields:
             try:
-                return data.values()
+                return [DatumAtPath(data[field], path=Fields([field])) for field in data.keys()]
             except AttributeError:
                 return []
         else:
-            return filter(lambda x: x != None, [self.safe_get(data, field) for field in self.fields])
+            result = [DatumAtPath(val, path=Fields([field]))
+                      for field, val in [(field, self.safe_get(data, field)) for field in self.fields]
+                      if val is not None]
+
+            return result
 
     def __str__(self):
         return ','.join(self.fields)
@@ -223,13 +268,12 @@ class Index(JSONPath):
     NOTE: For the concrete syntax of `[*]`, the abstract syntax is a Slice() with no parameters (equiv to `[:]`
     """
 
-    # TODO: multiple and/or range slices
     def __init__(self, index):
         self.index = index
 
     def find(self, data):
         if len(data) > self.index:
-            return [data[self.index]]
+            return [DatumAtPath(data[self.index], path=self)]
         else:
             return []
 
@@ -276,9 +320,9 @@ class Slice(JSONPath):
         # Some iterators do not support slicing but we can still
         # at least work for '*'
         if self.start == None and self.end == None and self.step == None:
-            return data
+            return [DatumAtPath(data[i], Index(i)) for i in xrange(0, len(data))]
         else:
-            return data[self.start:self.end:self.step]
+            return [DatumAtPath(data[i], Index(i)) for i in range(0, len(data))[self.start:self.end:self.step]]
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:

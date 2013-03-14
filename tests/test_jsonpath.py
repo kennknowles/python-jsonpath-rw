@@ -16,14 +16,25 @@ class TestJsonPath(unittest.TestCase):
             print 'parse("%s").find(%s) =?= %s' % (string, data, target)
             result = parse(string).find(data)
             if isinstance(target, list):
-                assert list(result) == target
+                assert [r.value for r in result] == target
             else:
-                assert result == target
+                assert result.value == target
 
     def test_fields(self):
         self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
                            ('*', {'foo': 1, 'baz': 2}, [1, 2]) ])
+
+    def test_magic_id(self):
+        self.check_cases([ 
+            ('id', {'id': 'baz'}, ['baz']),
+        #    ('id', {}, '@'),
+        #('id', {}, '@'),
+        #   ('foo.id', {'foo': {}}, ['foo']),
+        #   ('foo[*].id', {'foo': {}}, 'foo[0]'),
+        #   ('foo.baz.id', {'foo': {'baz': {}}}, ['foo.baz']),
+        #   ('foo.id', [{'foo': {}}, {'foo': {}}], ['foo[0]', 'foo[1]']) 
+        ])
 
     def test_index(self):
         self.check_cases([('[0]', [42], [42]),
