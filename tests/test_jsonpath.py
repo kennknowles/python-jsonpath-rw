@@ -83,16 +83,3 @@ class TestJsonPath(unittest.TestCase):
     def test_descendants_paths(self):
         self.check_paths([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, ['foo.baz', 'foo.bing.baz'] )])
 
-    #
-    # And a final hack... the field "id" should always return the path of the queryset if it is not present in the object...
-    #
-    #def test_magic_id(self):
-    #    self.check_cases([ 
-    #        ('id', {'id': 'baz'}, ['baz']),
-        #    ('id', {}, '@'),
-        #('id', {}, '@'),
-        #   ('foo.id', {'foo': {}}, ['foo']),
-        #   ('foo[*].id', {'foo': {}}, 'foo[0]'),
-        #   ('foo.baz.id', {'foo': {'baz': {}}}, ['foo.baz']),
-        #   ('foo.id', [{'foo': {}}, {'foo': {}}], ['foo[0]', 'foo[1]']) 
-        #    ])
