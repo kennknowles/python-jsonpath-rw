@@ -3,6 +3,8 @@ Python JSONPath Read/Write
 
 https://github.com/kennknowles/python-jsonpath-rw
 
+[![Build Status](https://travis-ci.org/kennknowles/python-jsonpath-rw.png)](https://travis-ci.org/kennknowles/python-jsonpath-rw)
+
 This package provides a robust implementation of JSONPath with read and
 update capability as well as additional operators, described below.
 
@@ -76,6 +78,18 @@ and here are some examples:
  - `Child(Fields('foo'), Index(42))`
  - `Where(Slice(), Fields('subfield'))`
  - `Descendants(jsonpath, jsonpath)`
+
+
+Extensions
+----------
+
+ - _Path data_: The result of `JsonPath.find` are of the type `DatumAtPath`, which
+   provides a `value` field for the matched data, but also a `path` field for where
+   it was found. This object proxies all other attributes to act "like" the `value`
+   field, so lightweight usage is still easy.
+ - _Automatic Ids_: If you set `jsonpath_rw.auto_id_field` to a value other than 
+   None, then for any piece of data missing that field, it will be replaced by 
+   the JSONPath to it, giving automatic unique ids to any piece of data.
 
 
 More to explore
