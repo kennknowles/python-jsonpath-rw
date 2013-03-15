@@ -4,6 +4,10 @@ from itertools import *
 
 logger = logging.getLogger(__name__)
 
+# Turn on/off the automatic creation of id attributes
+# ... could be a kwarg pervasively but uses are rare and simple today
+auto_id_field = None
+
 class JSONPath(object):
     """
     The base class for JSONPath abstract syntax; those
@@ -22,6 +26,17 @@ class JSONPath(object):
     def update(self, data, val):
         "Returns `data` with the specified path replaced by `val`"
         raise NotImplementedError()
+
+    def child(self, child):
+        """
+        Equivalent to Child(self, next) but with some canonicalization
+        """
+        if isinstance(self, This):
+            return child
+        elif isinstance(child, This):
+            return self
+        else:
+            return Child(self, child)
 
 class DatumAtPath(object):
     """
@@ -48,7 +63,38 @@ class DatumAtPath(object):
         return str(self.value)
 
     def in_context(self, context_path):
-        return DatumAtPath(self.value, path=self.path if isinstance(context_path, This) else Child(context_path, self.path))
+        return DatumAtPath(self.value, path=context_path.child(self.path))
+
+class AutoIdDatum(DatumAtPath):
+    """
+    This behaves like a DatumAtPath, but the value is
+    always the path leading up to it (not including the "id").
+
+    For example, it will make "foo.bar.id" return a datum
+    that behaves like DatumAtPath(value="foo.bar", path="foo.bar.id").
+
+    This is disabled by default; it can be turned on by
+    settings the `auto_id_field` global to a value other
+    than `None`. 
+    """
+    
+    def __init__(self, auto_id):
+        self.auto_id = auto_id
+
+    @property
+    def value(self):
+        return str(self.auto_id)
+
+    @property
+    def path(self):
+        return self.auto_id.child(Fields(auto_id_field))
+
+    def __str__(self):
+        return str(self.path)
+
+    def in_context(self, context_path):
+        return AutoIdDatum(context_path.child(self.auto_id))
+
 
 class Root(JSONPath):
     """
@@ -233,11 +279,15 @@ class Fields(JSONPath):
     def __init__(self, *fields):
         self.fields = fields
 
-    def safe_get(self, val, field):
+    def get_datum(self, val, field):
         try:
-            return val.get(field)
-        except AttributeError:
-            return None
+            field_value = val[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
+            return DatumAtPath(value=field_value, path=Fields(field))
+        except (TypeError, AttributeError, KeyError): # This may not be all the interesting exceptions
+            if field == auto_id_field:
+                return AutoIdDatum(auto_id=This())
+            else:
+                return None
 
     def find(self, data):
         if '*' in self.fields:
@@ -246,9 +296,9 @@ class Fields(JSONPath):
             except AttributeError:
                 return []
         else:
-            result = [DatumAtPath(val, path=Fields(field))
-                      for field, val in [(field, self.safe_get(data, field)) for field in self.fields]
-                      if val is not None]
+            result = [datum
+                      for datum in [self.get_datum(data, field) for field in self.fields]
+                      if datum is not None]
 
             return result
 

@@ -1,5 +1,7 @@
 import unittest
 
+from jsonpath_rw import jsonpath # For setting the global auto_id_field flag
+
 from jsonpath_rw.parser import parse
 from jsonpath_rw.jsonpath import *
 
@@ -23,27 +25,27 @@ class TestJsonPath(unittest.TestCase):
             else:
                 assert result.value == target
 
-    def test_fields(self):
+    def test_fields_value(self):
         self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
                            ('*', {'foo': 1, 'baz': 2}, [1, 2]) ])
 
-    def test_index(self):
+    def test_index_value(self):
         self.check_cases([('[0]', [42], [42]),
                           ('[2]', [34, 65, 29, 59], [29])])
 
-    def test_slice(self):
+    def test_slice_value(self):
         self.check_cases([('[*]', [1, 2, 3], [1, 2, 3]),
                           ('[*]', xrange(1, 4), [1, 2, 3]),
                           ('[1:]', [1, 2, 3, 4], [2, 3, 4]),
                           ('[:2]', [1, 2, 3, 4], [1, 2])])
 
-    def test_child(self):
+    def test_child_value(self):
         self.check_cases([('foo.baz', {'foo': {'baz': 3}}, [3]),
                           ('foo.baz', {'foo': {'baz': [3]}}, [[3]]),
                           ('foo.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
 
-    def test_descendants(self):
+    def test_descendants_value(self):
         self.check_cases([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2] )])
 
     #
@@ -83,3 +85,32 @@ class TestJsonPath(unittest.TestCase):
     def test_descendants_paths(self):
         self.check_paths([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, ['foo.baz', 'foo.bing.baz'] )])
 
+
+    #
+    # Check the "auto_id_field" feature
+    #
+    def test_fields_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        self.check_cases([ ('foo.id', {'foo': 'baz'}, ['foo']),
+                           ('foo,baz.id', {'foo': 1, 'baz': 2}, ['foo', 'baz']),
+                           ('*.id', {'foo':{'id': 1}, 'baz': 2}, [1, 'baz']) ])
+
+    def test_index_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        self.check_cases([('[0].id', [42], ['[0]']),
+                          ('[2].id', [34, 65, 29, 59], ['[2]'])])
+
+    def test_slice_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        self.check_cases([ ('[*].id', [1, 2, 3], ['[0]', '[1]', '[2]']),
+                           ('[1:].id', [1, 2, 3, 4], ['[1]', '[2]', '[3]']) ])
+
+    def test_child_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        self.check_cases([('foo.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
+                          ('foo.baz.id', {'foo': {'baz': [3]}}, ['foo.baz']),
+                          ('foo.baz.bizzle.id', {'foo': {'baz': {'bizzle': 5}}}, ['foo.baz.bizzle'])])
+
+    def test_descendants_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        self.check_cases([('foo..baz.id', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, ['foo.baz', 'foo.bing.baz'] )])
