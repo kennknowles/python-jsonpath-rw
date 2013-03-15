@@ -4,4 +4,4 @@ python:
 install: 
  - "pip install . --use-mirrors"
  - "pip install pytest --use-mirrors"
-script: "py.test"
+script: py.test
