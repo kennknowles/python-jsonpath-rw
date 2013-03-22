@@ -121,7 +121,10 @@ class TestJsonPath(unittest.TestCase):
                           ('foo.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
 
     def test_descendants_value(self):
-        self.check_cases([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2] )])
+        self.check_cases([ 
+            ('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2] ),
+            ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
+        ])
 
     #
     # Check that the paths for the data are correct.

@@ -286,8 +286,8 @@ class Descendants(JSONPath):
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
             if isinstance(datum.value, list):
                 recursive_matches = [submatch
-                                     for submatch in match_recursively(DatumInContext(datum.value[i], context=datum, path=Index(i)))
-                                     for i in xrange(0, len(datum.value))]
+                                     for i in xrange(0, len(datum.value))
+                                     for submatch in match_recursively(DatumInContext(datum.value[i], context=datum, path=Index(i)))]
 
             elif isinstance(datum.value, dict):
                 recursive_matches = [submatch
