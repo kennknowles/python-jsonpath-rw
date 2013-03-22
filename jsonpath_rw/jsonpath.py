@@ -458,20 +458,20 @@ class Slice(JSONPath):
         self.end = end
         self.step = step
     
-    def find(self, data):
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        
         # Here's the hack. If it is a dictionary or some kind of constant,
         # put it in a single-element list
-        if (isinstance(data, dict) or isinstance(data, six.integer_types) 
-                                   or isinstance(data, six.string_types)):
-
-            return self.find([data])
+        if (isinstance(datum.value, dict) or isinstance(datum.value, six.integer_types) or isinstance(datum.value, six.string_types)):
+            return self.find(DatumInContext([datum.value], path=datum.path, context=datum.context))
 
         # Some iterators do not support slicing but we can still
         # at least work for '*'
         if self.start == None and self.end == None and self.step == None:
-            return [DatumInContext(data[i], Index(i)) for i in xrange(0, len(data))]
+            return [DatumInContext(datum.value[i], path=Index(i), context=datum) for i in xrange(0, len(datum.value))]
         else:
-            return [DatumInContext(data[i], Index(i)) for i in range(0, len(data))[self.start:self.end:self.step]]
+            return [DatumInContext(datum.value[i], path=Index(i), context=datum) for i in range(0, len(datum.value))[self.start:self.end:self.step]]
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:
@@ -480,6 +480,9 @@ class Slice(JSONPath):
             return '[%s%s%s]' % (self.start or '', 
                                    ':%d'%self.end if self.end else '',
                                    ':%d'%self.step if self.step else '')
+
+    def __repr__(self):
+        return '%s(start=%r,end=%r,step=%r)' % (self.__class__.__name__, self.start, self.end, self.step)
 
     def __eq__(self, other):
         return isinstance(other, Slice) and other.start == self.start and self.end == other.end and other.step == self.step

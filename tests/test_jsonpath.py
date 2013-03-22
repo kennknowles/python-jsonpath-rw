@@ -118,6 +118,14 @@ class TestJsonPath(unittest.TestCase):
                           ('[1:]', [1, 2, 3, 4], [2, 3, 4]),
                           ('[:2]', [1, 2, 3, 4], [1, 2])])
 
+        # Funky slice hacks
+        self.check_cases([
+            ('[*]', 1, [1]), # This is a funky hack
+            ('[0:]', 1, [1]), # This is a funky hack
+            ('[*]', {'foo':1}, [{'foo': 1}]), # This is a funky hack
+            ('[*].foo', {'foo':1}, [1]), # This is a funky hack
+        ])
+
     def test_child_value(self):
         self.check_cases([('foo.baz', {'foo': {'baz': 3}}, [3]),
                           ('foo.baz', {'foo': {'baz': [3]}}, [[3]]),
