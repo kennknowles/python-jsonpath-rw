@@ -106,8 +106,11 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, [1, 2, '@']) ])
 
     def test_index_value(self):
-        self.check_cases([('[0]', [42], [42]),
-                          ('[2]', [34, 65, 29, 59], [29])])
+        self.check_cases([
+            ('[0]', [42], [42]),
+            ('[5]', [42], []),
+            ('[2]', [34, 65, 29, 59], [29])
+        ])
 
     def test_slice_value(self):
         self.check_cases([('[*]', [1, 2, 3], [1, 2, 3]),

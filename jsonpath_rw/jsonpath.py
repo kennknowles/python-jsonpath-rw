@@ -415,9 +415,11 @@ class Index(JSONPath):
     def __init__(self, index):
         self.index = index
 
-    def find(self, data):
-        if len(data) > self.index:
-            return [DatumInContext(data[self.index], path=self)]
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        
+        if len(datum.value) > self.index:
+            return [DatumInContext(datum.value[self.index], path=self, context=datum)]
         else:
             return []
 
