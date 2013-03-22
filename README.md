@@ -5,10 +5,9 @@ https://github.com/kennknowles/python-jsonpath-rw
 
 [![Build Status](https://travis-ci.org/kennknowles/python-jsonpath-rw.png)](https://travis-ci.org/kennknowles/python-jsonpath-rw)
 
-This package provides a robust implementation of JSONPath with read and
-update capability as well as additional operators, described below.
+This library provides a robust and significantly extended implementation of JSONPath for Python.
 
-This package differs from other JSONPath implementations in that it
+This library differs from other JSONPath implementations in that it
 is a full _language_ implementation, meaning the JSONPath expressions 
 are first class objects, easy to analyze, transform, parse, print, 
 and extend. (You can also execute them :-)
@@ -83,13 +82,13 @@ and here are some examples:
 Extensions
 ----------
 
- - _Path data_: The result of `JsonPath.find` are of the type `DatumAtPath`, which
-   provides a `value` field for the matched data, but also a `path` field for where
-   it was found. This object proxies all other attributes to act "like" the `value`
-   field, so lightweight usage is still easy.
+ - _Path data_: The result of `JsonPath.find` provide detailed context and path
+   data so it is easy to traverse to parent objects, print full paths to pieces
+   of data, and generate automatic ids.
  - _Automatic Ids_: If you set `jsonpath_rw.auto_id_field` to a value other than 
    None, then for any piece of data missing that field, it will be replaced by 
-   the JSONPath to it, giving automatic unique ids to any piece of data.
+   the JSONPath to it, giving automatic unique ids to any piece of data. These ids will
+   take into account any ids already present as well.
 
 
 More to explore
