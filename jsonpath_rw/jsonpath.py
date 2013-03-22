@@ -187,11 +187,8 @@ class This(JSONPath):
     The JSONPath referring to the current datum. Concrete syntax is '@'.
     """
 
-    def find(self, data):
-        if isinstance(data, DatumInContext):
-            return [data]
-        else:
-            return [DatumInContext(data, path=This(), context=None)]
+    def find(self, datum):
+        return DatumInContext.wrap(datum)
 
     def update(self, data, val):
         return val
