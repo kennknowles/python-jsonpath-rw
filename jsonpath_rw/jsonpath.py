@@ -17,7 +17,7 @@ class JSONPath(object):
 
     def find(self, data):
         """
-        All `JSONPath` types support `find()`, which returns an iterable of `DatumAtPath`s.
+        All `JSONPath` types support `find()`, which returns an iterable of `DatumInContext`s.
         They keep track of the path followed to the current location, so if the calling code
         has some opinion about that, it can be passed in here as a starting point.
         """
@@ -38,74 +38,137 @@ class JSONPath(object):
         else:
             return Child(self, child)
 
-class DatumAtPath(object):
+    def make_datum(self, value):
+        if isinstance(value, DatumInContext):
+            return value
+        else:
+            return DatumInContext(value, path=Root(), context=None)
+
+class DatumInContext(object):
     """
-    Represents a single datum along with the path followed to locate it.
+    Represents a datum along a path from a context.
+
+    Essentially a zipper but with a structure represented by JsonPath, 
+    and where the context is more of a parent pointer than a proper 
+    representation of the context.
 
     For quick-and-dirty work, this proxies any non-special attributes
     to the underlying datum, but the actual datum can (and usually should)
     be retrieved via the `value` attribute.
 
-    To place `datum` within a path, use `datum.in_context(path)`, which prepends
-    `path` to that already stored.
+    To place `datum` within another, use `datum.in_context(context=..., path=...)`
+    which extends the path. If the datum already has a context, it places the entire
+    context within that passed in, so an object can be built from the inside
+    out.
     """
-    def __init__(self, value, path):
-        self.value = value
-        self.path = path
-
-    def __getattr__(self, attr):
-        if attr == 'id' and not hasattr(self.value, 'id'):
-            return str(self.path)
+    @classmethod
+    def wrap(cls, data):
+        if isinstance(data, cls):
+            return data
         else:
-            return getattr(self.value, attr)
+            return cls(data)
 
-    def __str__(self):
-        return str(self.value)
+    def __init__(self, value, path=None, context=None):
+        self.value = value
+        self.path = path or This()
+        self.context = None if context is None else DatumInContext.wrap(context)
 
-    def in_context(self, context_path):
-        return DatumAtPath(self.value, path=context_path.child(self.path))
+    def in_context(self, context, path):
+        context = DatumInContext.wrap(context)
 
-class AutoIdDatum(DatumAtPath):
+        if self.context:
+            return DatumInContext(value=self.value, path=self.path, context=context.in_context(path=path, context=context))
+        else:
+            return DatumInContext(value=self.value, path=path, context=context)
+
+    @property
+    def full_path(self):
+        return self.path if self.context is None else self.context.full_path.child(self.path)
+
+    @property
+    def id_pseudopath(self):
+        """
+        Looks like a path, but with ids stuck in when available
+        """
+        try:
+            pseudopath = Fields(str(self.value[auto_id_field]))
+        except (TypeError, AttributeError, KeyError): # This may not be all the interesting exceptions
+            pseudopath = self.path
+
+        if self.context:
+            return self.context.id_pseudopath.child(pseudopath)
+        else:
+            return pseudopath
+
+    def __repr__(self):
+        return '%s(value=%r, path=%r, context=%r)' % (self.__class__.__name__, self.value, self.path, self.context)
+
+    def __eq__(self, other):
+        return isinstance(other, DatumInContext) and other.value == self.value and other.path == self.path and self.context == other.context
+
+class AutoIdForDatum(DatumInContext):
     """
-    This behaves like a DatumAtPath, but the value is
-    always the path leading up to it (not including the "id").
+    This behaves like a DatumInContext, but the value is
+    always the path leading up to it, not including the "id",
+    and with any "id" fields along the way replacing the prior 
+    segment of the path
 
     For example, it will make "foo.bar.id" return a datum
-    that behaves like DatumAtPath(value="foo.bar", path="foo.bar.id").
+    that behaves like DatumInContext(value="foo.bar", path="foo.bar.id").
 
     This is disabled by default; it can be turned on by
     settings the `auto_id_field` global to a value other
     than `None`. 
     """
     
-    def __init__(self, auto_id):
-        self.auto_id = auto_id
+    def __init__(self, datum, id_field=None):
+        """
+        Invariant is that datum.path is the path from context to datum. The auto id
+        will either be the id in the datum (if present) or the id of the context
+        followed by the path to the datum.
+
+        The path to this datum is always the path to the context, the path to the
+        datum, and then the auto id field.
+        """
+        self.datum = datum
+        self.id_field = id_field or auto_id_field
 
     @property
     def value(self):
-        return str(self.auto_id)
+        return str(self.datum.id_pseudopath)
 
     @property
     def path(self):
-        return self.auto_id.child(Fields(auto_id_field))
+        return self.id_field
 
-    def __str__(self):
-        return str(self.path)
+    @property
+    def context(self):
+        return self.datum
 
-    def in_context(self, context_path):
-        return AutoIdDatum(context_path.child(self.auto_id))
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.datum)
+
+    def in_context(self, context, path):
+        return AutoIdForDatum(self.datum.in_context(context=context, path=path))
+
+    def __eq__(self, other):
+        return isinstance(other, AutoIdForDatum) and other.datum == self.datum and self.id_field == other.id_field
 
 
 class Root(JSONPath):
     """
-    The JSONPath referring to the root object. Concrete syntax is '$'.
-
-    WARNING! Currently synonymous with '@' because this library does not
-    keep track of parent pointers or any such thing.
+    The JSONPath referring to the "root" object. Concrete syntax is '$'.
+    The root is the topmost datum without any context attached.
     """
 
     def find(self, data):
-        return [DatumAtPath(data, path=Root())]
+        if not isinstance(data, DatumInContext):
+            return [DatumInContext(data, path=This(), context=None)]
+        else:
+            if data.context is None:
+                return data
+            else:
+                return Root().find(data.context)
 
     def update(self, data, val):
         return val
@@ -113,19 +176,34 @@ class Root(JSONPath):
     def __str__(self):
         return '$'
 
+    def __repr__(self):
+        return 'Root()'
+
+    def __eq__(self, other):
+        return isinstance(other, Root)
+
 class This(JSONPath):
     """
     The JSONPath referring to the current datum. Concrete syntax is '@'.
     """
 
     def find(self, data):
-        return [DatumAtPath(data, path=This())]
+        if isinstance(data, DatumInContext):
+            return [data]
+        else:
+            return [DatumInContext(data, path=This(), context=None)]
 
     def update(self, data, val):
         return val
 
     def __str__(self):
         return '@'
+
+    def __repr__(self):
+        return 'This()'
+
+    def __eq__(self, other):
+        return isinstance(other, This)
 
 class Child(JSONPath):
     """
@@ -137,16 +215,25 @@ class Child(JSONPath):
         self.left = left
         self.right = right
 
-    def find(self, data):
-        return [submatch.in_context(subdata.path)
-                for subdata in self.left.find(data)
-                for submatch in self.right.find(subdata.value)]
+    def find(self, datum):
+        """
+        Extra special case: auto ids do not have children,
+        so cut it off right now rather than auto id the auto id
+        """
+        
+        return [submatch
+                for subdata in self.left.find(datum)
+                if not isinstance(subdata, AutoIdForDatum)
+                for submatch in self.right.find(subdata)]
 
     def __eq__(self, other):
         return isinstance(other, Child) and self.left == other.left and self.right == other.right
 
     def __str__(self):
         return '%s.%s' % (self.left, self.right)
+
+    def __repr__(self):
+        return '%s(%r, %r)' % (self.__class__.__name__, self.left, self.right)
 
 class Where(JSONPath):
     """
@@ -181,7 +268,7 @@ class Descendants(JSONPath):
         self.left = left
         self.right = right
 
-    def find(self, data):
+    def find(self, datum):
         # <left> .. <right> ==> <left> . (<right> | *..<right> | [*]..<right>)
         #
         # With with a wonky caveat that since Slice() has funky coercions
@@ -189,23 +276,23 @@ class Descendants(JSONPath):
         # infinite loop. So right here we implement the coercion-free version.
 
         # Get all left matches into a list
-        left_matches = self.left.find(data)
+        left_matches = self.left.find(datum)
         if not isinstance(left_matches, list):
             left_matches = [left_matches]
 
-        def match_recursively(data):
-            right_matches = self.right.find(data)
+        def match_recursively(datum):
+            right_matches = self.right.find(datum)
 
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
-            if isinstance(data, list):
-                recursive_matches = [submatch.in_context(Index(i))
-                                     for submatch in match_recursively(data[i])
-                                     for i in xrange(0, len(data))]
+            if isinstance(datum.value, list):
+                recursive_matches = [submatch
+                                     for submatch in match_recursively(DatumInContext(datum.value[i], context=datum, path=Index(i)))
+                                     for i in xrange(0, len(datum.value))]
 
-            elif isinstance(data, dict):
-                recursive_matches = [submatch.in_context(Fields(field))
-                                     for field in data.keys()
-                                     for submatch in match_recursively(data[field])]
+            elif isinstance(datum.value, dict):
+                recursive_matches = [submatch
+                                     for field in datum.value.keys()
+                                     for submatch in match_recursively(DatumInContext(datum.value[field], context=datum, path=Fields(field)))]
 
             else:
                 recursive_matches = []
@@ -213,9 +300,9 @@ class Descendants(JSONPath):
             return right_matches + list(recursive_matches)
                 
         # TODO: repeatable iterator instead of list?
-        return [submatch.in_context(left_match.path)
+        return [submatch
                 for left_match in left_matches
-                for submatch in match_recursively(left_match.value)]
+                for submatch in match_recursively(left_match)]
             
     def is_singular():
         return False
@@ -279,34 +366,41 @@ class Fields(JSONPath):
     def __init__(self, *fields):
         self.fields = fields
 
-    def get_datum(self, val, field):
-        try:
-            field_value = val[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
-            return DatumAtPath(value=field_value, path=Fields(field))
-        except (TypeError, AttributeError, KeyError): # This may not be all the interesting exceptions
-            if field == auto_id_field:
-                return AutoIdDatum(auto_id=This())
-            else:
+    def get_field_datum(self, datum, field):
+        if field == auto_id_field:
+            return AutoIdForDatum(datum)
+        else:
+            try:
+                field_value = datum.value[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
+                return DatumInContext(value=field_value, path=Fields(field), context=datum)
+            except (TypeError, KeyError, AttributeError):
                 return None
 
-    def find(self, data):
-        if '*' in self.fields:
-            try:
-                return [DatumAtPath(data[field], path=Fields(field)) for field in data.keys()]
-            except AttributeError:
-                return []
+    def reified_fields(self, datum):
+        if '*' not in self.fields:
+            return self.fields
         else:
-            result = [datum
-                      for datum in [self.get_datum(data, field) for field in self.fields]
-                      if datum is not None]
+            try:
+                fields = tuple(datum.value.keys())
+                return fields if auto_id_field is None else fields + (auto_id_field,)
+            except AttributeError:
+                return ()
 
-            return result
+    def find(self, datum):
+        datum  = DatumInContext.wrap(datum)
+        
+        return  [field_datum
+                 for field_datum in [self.get_field_datum(datum, field) for field in self.reified_fields(datum)]
+                 if field_datum is not None]
 
     def __str__(self):
         return ','.join(self.fields)
 
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
+
     def __eq__(self, other):
-        return isinstance(other, Fields) and self.fields == other.fields
+        return isinstance(other, Fields) and tuple(self.fields) == tuple(other.fields)
 
 
 class Index(JSONPath):
@@ -323,7 +417,7 @@ class Index(JSONPath):
 
     def find(self, data):
         if len(data) > self.index:
-            return [DatumAtPath(data[self.index], path=self)]
+            return [DatumInContext(data[self.index], path=self)]
         else:
             return []
 
@@ -373,9 +467,9 @@ class Slice(JSONPath):
         # Some iterators do not support slicing but we can still
         # at least work for '*'
         if self.start == None and self.end == None and self.step == None:
-            return [DatumAtPath(data[i], Index(i)) for i in xrange(0, len(data))]
+            return [DatumInContext(data[i], Index(i)) for i in xrange(0, len(data))]
         else:
-            return [DatumAtPath(data[i], Index(i)) for i in range(0, len(data))[self.start:self.end:self.step]]
+            return [DatumInContext(data[i], Index(i)) for i in range(0, len(data))[self.start:self.end:self.step]]
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:
