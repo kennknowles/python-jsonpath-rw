@@ -13,7 +13,7 @@ readme = 'README.txt' if os.path.exists('README.txt') else 'README.md'
 
 setuptools.setup(
     name='jsonpath-rw',
-    version='0.5',
+    version='0.6',
     description='A robust and significantly extended implementation of JSONPath for Python, with a clear AST for metaprogramming.',
     author='Kenneth Knowles',
     author_email='kenn.knowles@gmail.com',
