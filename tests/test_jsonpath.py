@@ -95,7 +95,7 @@ class TestJsonPath(unittest.TestCase):
             if isinstance(target, list):
                 assert [r.value for r in result] == target
             elif isinstance(target, set):
-                assert {r.value for r in result} == target
+                assert set([r.value for r in result]) == target
             else:
                 assert result.value == target
 
@@ -103,10 +103,10 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = None
         self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
-                           ('*', {'foo': 1, 'baz': 2}, {1, 2}) ])
+                           ('*', {'foo': 1, 'baz': 2}, set([1, 2])) ])
 
         jsonpath.auto_id_field = 'id'
-        self.check_cases([ ('*', {'foo': 1, 'baz': 2}, {1, 2, '@'}) ])
+        self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '@'])) ])
 
     def test_index_value(self):
         self.check_cases([
@@ -154,7 +154,7 @@ class TestJsonPath(unittest.TestCase):
             if isinstance(target, list):
                 assert [str(r.full_path) for r in result] == target
             elif isinstance(target, set):
-                assert {str(r.full_path) for r in result} == target
+                assert set([str(r.full_path) for r in result]) == target
             else:
                 assert str(result.path) == target
 
@@ -162,10 +162,10 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = None
         self.check_paths([ ('foo', {'foo': 'baz'}, ['foo']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, ['foo', 'baz']),
-                           ('*', {'foo': 1, 'baz': 2}, {'foo', 'baz'}) ])
+                           ('*', {'foo': 1, 'baz': 2}, set(['foo', 'baz'])) ])
 
         jsonpath.auto_id_field = 'id'
-        self.check_paths([ ('*', {'foo': 1, 'baz': 2}, {'foo', 'baz', 'id'}) ])
+        self.check_paths([ ('*', {'foo': 1, 'baz': 2}, set(['foo', 'baz', 'id'])) ])
 
     def test_index_paths(self):
         self.check_paths([('[0]', [42], ['[0]']),
@@ -195,7 +195,7 @@ class TestJsonPath(unittest.TestCase):
                            ('*.id', 
                             {'foo':{'id': 1},
                              'baz': 2},
-                             {'1', 'baz'}) ])
+                             set(['1', 'baz'])) ])
 
     def test_index_auto_id(self):
         jsonpath.auto_id_field = "id"
