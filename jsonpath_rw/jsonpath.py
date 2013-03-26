@@ -1,5 +1,7 @@
+from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import logging
 import six
+from six.moves import xrange
 from itertools import *
 
 logger = logging.getLogger(__name__)
@@ -283,7 +285,7 @@ class Descendants(JSONPath):
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
             if isinstance(datum.value, list):
                 recursive_matches = [submatch
-                                     for i in xrange(0, len(datum.value))
+                                     for i in range(0, len(datum.value))
                                      for submatch in match_recursively(DatumInContext(datum.value[i], context=datum, path=Index(i)))]
 
             elif isinstance(datum.value, dict):

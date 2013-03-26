@@ -1,3 +1,4 @@
+from __future__ import print_function, absolute_import, division, generators, nested_scopes
 import sys
 import os.path
 import logging
@@ -163,7 +164,7 @@ class IteratorToTokenStream(object):
 
     def token(self):
         try:
-            return self.iterator.next()
+            return next(self.iterator)
         except StopIteration:
             return None
 
@@ -171,4 +172,4 @@ class IteratorToTokenStream(object):
 if __name__ == '__main__':
     logging.basicConfig()
     parser = JsonPathParser(debug=True)
-    print parser.parse(sys.stdin.read())
+    print(parser.parse(sys.stdin.read()))

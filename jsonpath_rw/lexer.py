@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import sys
 import logging
 
@@ -40,7 +41,7 @@ class JsonPathLexer(object):
     
     reserved_words = { 'where': 'WHERE' }
 
-    tokens = ['DOUBLEDOT', 'NUMBER', 'ID'] + reserved_words.values()
+    tokens = ['DOUBLEDOT', 'NUMBER', 'ID'] + list(reserved_words.values())
 
     states = [ ('singlequote', 'exclusive'),
                ('doublequote', 'exclusive') ]
@@ -107,4 +108,4 @@ if __name__ == '__main__':
     logging.basicConfig()
     lexer = JsonPathLexer(debug=True)
     for token in lexer.tokenize(sys.stdin.read()):
-        print '%-20s%s' % (token.value, token.type)
+        print('%-20s%s' % (token.value, token.type))

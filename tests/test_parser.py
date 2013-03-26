@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import unittest
 
 from jsonpath_rw.lexer import JsonPathLexer
@@ -15,7 +16,7 @@ class TestParser(unittest.TestCase):
         parser = JsonPathParser(debug=True, lexer_class=lambda:JsonPathLexer(debug=False)) # Note that just manually passing token streams avoids this dep, but that sucks
 
         for string, parsed in test_cases:
-            print string, '=?=', parsed # pytest captures this and we see it only on a failure, for debugging
+            print(string, '=?=', parsed) # pytest captures this and we see it only on a failure, for debugging
             assert parser.parse(string) == parsed
 
     def test_atomic(self):

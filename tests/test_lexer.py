@@ -1,3 +1,4 @@
+from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import logging
 import unittest
 
@@ -22,7 +23,7 @@ class TestLexer(unittest.TestCase):
         stream2 = list(stream2)
         assert len(stream1) == len(stream2)
         for token1, token2 in zip(stream1, stream2):
-            print token1, token2
+            print(token1, token2)
             assert token1.type  == token2.type
             assert token1.value == token2.value
 
