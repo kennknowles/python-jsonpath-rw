@@ -108,6 +108,22 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = 'id'
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '@'])) ])
 
+    def test_root_value(self):
+        jsonpath.auto_id_field = None
+        self.check_cases([ 
+            ('$', {'foo': 'baz'}, [{'foo':'baz'}]),
+            ('foo.$', {'foo': 'baz'}, [{'foo':'baz'}]),
+            ('foo.$.foo', {'foo': 'baz'}, ['baz']),
+        ])
+
+    def test_this_value(self):
+        jsonpath.auto_id_field = None
+        self.check_cases([ 
+            ('@', {'foo': 'baz'}, [{'foo':'baz'}]),
+            ('foo.@', {'foo': 'baz'}, ['baz']),
+            ('foo.@.baz', {'foo': {'baz': 3}}, [3]),
+        ])
+
     def test_index_value(self):
         self.check_cases([
             ('[0]', [42], [42]),
@@ -167,6 +183,22 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = 'id'
         self.check_paths([ ('*', {'foo': 1, 'baz': 2}, set(['foo', 'baz', 'id'])) ])
 
+    def test_root_paths(self):
+        jsonpath.auto_id_field = None
+        self.check_paths([ 
+            ('$', {'foo': 'baz'}, ['$']),
+            ('foo.$', {'foo': 'baz'}, ['$']),
+            ('foo.$.foo', {'foo': 'baz'}, ['foo']),
+        ])
+
+    def test_this_paths(self):
+        jsonpath.auto_id_field = None
+        self.check_paths([ 
+            ('@', {'foo': 'baz'}, ['@']),
+            ('foo.@', {'foo': 'baz'}, ['foo']),
+            ('foo.@.baz', {'foo': {'baz': 3}}, ['foo.baz']),
+        ])
+
     def test_index_paths(self):
         self.check_paths([('[0]', [42], ['[0]']),
                           ('[2]', [34, 65, 29, 59], ['[2]'])])
@@ -196,6 +228,22 @@ class TestJsonPath(unittest.TestCase):
                             {'foo':{'id': 1},
                              'baz': 2},
                              set(['1', 'baz'])) ])
+
+    def test_root_auto_id(self):
+        jsonpath.auto_id_field = 'id'
+        self.check_cases([ 
+            ('$.id', {'foo': 'baz'}, ['$']), # This is a wonky case that is not that interesting
+            ('foo.$.id', {'foo': 'baz', 'id': 'bizzle'}, ['bizzle']), 
+            ('foo.$.baz.id', {'foo': 4, 'baz': 3}, ['baz']),
+        ])
+
+    def test_this_auto_id(self):
+        jsonpath.auto_id_field = 'id'
+        self.check_cases([ 
+            ('id', {'foo': 'baz'}, ['@']), # This is, again, a wonky case that is not that interesting
+            ('foo.@.id', {'foo': 'baz'}, ['foo']),
+            ('foo.@.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
+        ])
 
     def test_index_auto_id(self):
         jsonpath.auto_id_field = "id"

@@ -33,10 +33,12 @@ class JSONPath(object):
         """
         Equivalent to Child(self, next) but with some canonicalization
         """
-        if isinstance(self, This):
+        if isinstance(self, This) or isinstance(self, Root):
             return child
         elif isinstance(child, This):
             return self
+        elif isinstance(child, Root):
+            return child
         else:
             return Child(self, child)
 
@@ -165,10 +167,10 @@ class Root(JSONPath):
 
     def find(self, data):
         if not isinstance(data, DatumInContext):
-            return [DatumInContext(data, path=This(), context=None)]
+            return [DatumInContext(data, path=Root(), context=None)]
         else:
             if data.context is None:
-                return data
+                return [DatumInContext(data.value, context=None, path=Root())]
             else:
                 return Root().find(data.context)
 
@@ -190,7 +192,7 @@ class This(JSONPath):
     """
 
     def find(self, datum):
-        return DatumInContext.wrap(datum)
+        return [DatumInContext.wrap(datum)]
 
     def update(self, data, val):
         return val
