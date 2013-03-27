@@ -37,21 +37,22 @@ class JsonPathLexer(object):
     #
     # Anyhow, it is pythonic to give some rope to hang oneself with :-)
 
-    literals = ['*', '.', '[', ']', '(', ')', '$', ',', ':', '|', '&', '@']
+    literals = ['*', '.', '[', ']', '(', ')', '$', ',', ':', '|', '&']
     
     reserved_words = { 'where': 'WHERE' }
 
-    tokens = ['DOUBLEDOT', 'NUMBER', 'ID'] + list(reserved_words.values())
+    tokens = ['DOUBLEDOT', 'NUMBER', 'ID', 'NAMED_OPERATOR'] + list(reserved_words.values())
 
     states = [ ('singlequote', 'exclusive'),
-               ('doublequote', 'exclusive') ]
+               ('doublequote', 'exclusive'),
+               ('backquote', 'exclusive') ]
 
     # Normal lexing, rather easy
     t_DOUBLEDOT = r'\.\.'
     t_ignore = ' \t'
 
     def t_ID(self, t):
-        r'[a-zA-Z_][a-zA-Z0-9_]*'
+        r'[a-zA-Z_@][a-zA-Z0-9_@]*'
         t.type = self.reserved_words.get(t.value, 'ID')
         return t
 
@@ -94,6 +95,25 @@ class JsonPathLexer(object):
 
     def t_doublequote_error(self, t):
         raise Exception('Error on line %s, col %s while lexing doublequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.latest_newline, t.value[0]))
+
+    
+    # Back-quoted "magic" operators
+    t_backquote_ignore = ''
+    def t_BACKQUOTE(self, t):
+        r'`'
+        t.lexer.string_start = t.lexer.lexpos
+        t.lexer.push_state('backquote')
+
+    def t_backquote_BACKQUOTE(self, t):
+        r'([^`]|\\`)*`'
+        t.value = t.value[:-1]
+        t.type = 'NAMED_OPERATOR'
+        t.lexer.pop_state()
+        return t
+
+    def t_backquote_error(self, t):
+        raise Exception('Error on line %s, col %s while lexing backquoted operator: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.latest_newline, t.value[0]))
+
 
     # Counting lines, handling errors
     def t_newline(self, t):

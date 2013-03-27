@@ -198,7 +198,7 @@ class This(JSONPath):
         return val
 
     def __str__(self):
-        return '@'
+        return '`this`'
 
     def __repr__(self):
         return 'This()'

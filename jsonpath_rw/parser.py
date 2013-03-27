@@ -84,9 +84,12 @@ class JsonPathParser(object):
         "jsonpath : fields_or_any"
         p[0] = Fields(*p[1])
 
-    def p_jsonpath_this(self, p):
-        "jsonpath : '@'"
-        p[0] = This()
+    def p_jsonpath_named_operator(self, p):
+        "jsonpath : NAMED_OPERATOR"
+        if p[1] == 'this':
+            p[0] = This()
+        else:
+            raise Exception('Unknown named operator `%s` at %s:%s' % (t.value, t.lineno, t.col)) 
 
     def p_jsonpath_root(self, p):
         "jsonpath : '$'"

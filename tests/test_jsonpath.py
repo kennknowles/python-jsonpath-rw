@@ -103,10 +103,11 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = None
         self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
+                           ('@foo', {'@foo': 1}, [1]),
                            ('*', {'foo': 1, 'baz': 2}, set([1, 2])) ])
 
         jsonpath.auto_id_field = 'id'
-        self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '@'])) ])
+        self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '`this`'])) ])
 
     def test_root_value(self):
         jsonpath.auto_id_field = None
@@ -119,9 +120,9 @@ class TestJsonPath(unittest.TestCase):
     def test_this_value(self):
         jsonpath.auto_id_field = None
         self.check_cases([ 
-            ('@', {'foo': 'baz'}, [{'foo':'baz'}]),
-            ('foo.@', {'foo': 'baz'}, ['baz']),
-            ('foo.@.baz', {'foo': {'baz': 3}}, [3]),
+            ('`this`', {'foo': 'baz'}, [{'foo':'baz'}]),
+            ('foo.`this`', {'foo': 'baz'}, ['baz']),
+            ('foo.`this`.baz', {'foo': {'baz': 3}}, [3]),
         ])
 
     def test_index_value(self):
@@ -194,9 +195,9 @@ class TestJsonPath(unittest.TestCase):
     def test_this_paths(self):
         jsonpath.auto_id_field = None
         self.check_paths([ 
-            ('@', {'foo': 'baz'}, ['@']),
-            ('foo.@', {'foo': 'baz'}, ['foo']),
-            ('foo.@.baz', {'foo': {'baz': 3}}, ['foo.baz']),
+            ('`this`', {'foo': 'baz'}, ['`this`']),
+            ('foo.`this`', {'foo': 'baz'}, ['foo']),
+            ('foo.`this`.baz', {'foo': {'baz': 3}}, ['foo.baz']),
         ])
 
     def test_index_paths(self):
@@ -240,9 +241,9 @@ class TestJsonPath(unittest.TestCase):
     def test_this_auto_id(self):
         jsonpath.auto_id_field = 'id'
         self.check_cases([ 
-            ('id', {'foo': 'baz'}, ['@']), # This is, again, a wonky case that is not that interesting
-            ('foo.@.id', {'foo': 'baz'}, ['foo']),
-            ('foo.@.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
+            ('id', {'foo': 'baz'}, ['`this`']), # This is, again, a wonky case that is not that interesting
+            ('foo.`this`.id', {'foo': 'baz'}, ['foo']),
+            ('foo.`this`.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
         ])
 
     def test_index_auto_id(self):
