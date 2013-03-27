@@ -28,6 +28,8 @@ Atomic expressions:
 Syntax                        | Meaning
 ------------------------------|-------------------
 `$`                           | The root object
+`` `this` ``                  | The "current" object.
+`` `foo` ``                   | More generally, this syntax allows "named operators" to extend JSONPath is arbitrary ways
 _field_                       | Specified field(s), described below
 `[` _field_ `]`               | Same as _field_
 `[` _idx_ `]`                 | Array access, described below (this is always unambiguous with field access)
@@ -58,9 +60,9 @@ Array specifiers ( _idx_ ):
 
 Syntax                                 | Meaning
 ---------------------------------------|----------------------------------------
- - `[`_n_`]`                           | array index (may be comma-separated list)
- - `[`_start_`?:`_end_`?]`             | array slicing (note that _step_ is unimplemented only due to lack of need thus far)
- - `[*]`                               | any array index
+ `[`_n_`]`                             | array index (may be comma-separated list)
+ `[`_start_`?:`_end_`?]`               | array slicing (note that _step_ is unimplemented only due to lack of need thus far)
+ `[*]`                                 | any array index
 
 
 Programmatic JSONPath
@@ -89,6 +91,9 @@ Extensions
    None, then for any piece of data missing that field, it will be replaced by 
    the JSONPath to it, giving automatic unique ids to any piece of data. These ids will
    take into account any ids already present as well.
+ - _Named operators_: Instead of using `@` to reference the currently object, this library
+   uses `` `this` ``. In general, any string contained in backquotes can be made to be
+   a new operator, currently by extending the library.
 
 
 More to explore
