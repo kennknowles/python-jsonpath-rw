@@ -1,4 +1,5 @@
 import setuptools 
+import io
 import sys
 import os.path
 import subprocess
@@ -13,13 +14,13 @@ readme = 'README.txt' if os.path.exists('README.txt') else 'README.md'
 
 setuptools.setup(
     name='jsonpath-rw',
-    version='1.1',
+    version='1.1.1',
     description='A robust and significantly extended implementation of JSONPath for Python, with a clear AST for metaprogramming.',
     author='Kenneth Knowles',
     author_email='kenn.knowles@gmail.com',
     url='https://github.com/kennknowles/python-jsonpath-rw',
     license='Apache 2.0',
-    long_description=open(readme).read(),
+    long_description=io.open(readme, encoding='utf-8').read(),
     packages = ['jsonpath_rw'],
     test_suite = 'tests',
     install_requires = [ 'ply', 'decorator', 'six' ],
