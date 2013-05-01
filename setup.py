@@ -9,8 +9,13 @@ import subprocess
 if not os.path.exists('README.txt') and 'sdist' in sys.argv:
     subprocess.call(['pandoc', '--to=rst', '--smart', '--output=README.txt', 'README.md'])
 
-# But use the best README around
-readme = 'README.txt' if os.path.exists('README.txt') else 'README.md'
+# But use the best README around; never fail - there are some Windows locales that seem to die on smartquotes,
+# even with the explicit encoding
+try:
+    readme = 'README.txt' if os.path.exists('README.txt') else 'README.md'
+    long_description = io.open(readme, encoding='utf-8').read()
+except:
+    long_description = 'Could not read README.txt'
 
 setuptools.setup(
     name='jsonpath-rw',
@@ -20,7 +25,7 @@ setuptools.setup(
     author_email='kenn.knowles@gmail.com',
     url='https://github.com/kennknowles/python-jsonpath-rw',
     license='Apache 2.0',
-    long_description=io.open(readme, encoding='utf-8').read(),
+    long_description=long_description,
     packages = ['jsonpath_rw'],
     test_suite = 'tests',
     install_requires = [ 'ply', 'decorator', 'six' ],
