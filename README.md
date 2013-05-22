@@ -6,11 +6,48 @@ https://github.com/kennknowles/python-jsonpath-rw
 [![Build Status](https://travis-ci.org/kennknowles/python-jsonpath-rw.png)](https://travis-ci.org/kennknowles/python-jsonpath-rw)
 
 This library provides a robust and significantly extended implementation of JSONPath for Python.
+It is tested with Python 2.6, 2.7, 3.2, and 3.3.
 
 This library differs from other JSONPath implementations in that it
 is a full _language_ implementation, meaning the JSONPath expressions 
 are first class objects, easy to analyze, transform, parse, print, 
 and extend. (You can also execute them :-)
+
+Quick Start
+-----------
+
+To install, use pip:
+
+```
+$ pip install jsonpath-rw
+```
+
+Then:
+
+```python
+$ python
+
+>>> from jsonpath_rw import jsonpath, parse
+
+# A robust parser, not just a regex, makes powerful extensions possible
+>>> jsonpath_expr = parse('foo[*].baz')
+
+# Extracting values is easy
+>>> [match.value for match in jsonpath_expr.find({'foo': [{'baz': 1}, {'baz': 2}]})]
+[1, 2]
+
+# Matches remember where they came from
+>>> [str(match.full_path) for match in jsonpath_expr.find({'foo': [{'baz': 1}, {'baz': 2}]})]
+['foo.[0].baz', 'foo.[1].baz']
+
+# And this can be useful for automatically providing ids for bits of data that do not have them (currently a global switch)
+>>> jsonpath.auto_id_field = 'id'
+>>> [match.value for match in parse('foo[*].id').find({'foo': [{'id': 'bizzle'}, {'baz': 3}]})]
+['foo.bizzle', 'foo.[1]']
+
+# You can also build expressions directly quite easily 
+>>> jsonpath_expr_direct = Fields('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
+```
 
 
 JSONPath Syntax
