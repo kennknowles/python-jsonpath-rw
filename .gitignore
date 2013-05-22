@@ -9,3 +9,5 @@
 /README.txt
 /dist
 /*.egg-info
+
+.coverage
