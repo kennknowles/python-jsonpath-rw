@@ -29,7 +29,7 @@ $ python
 
 >>> from jsonpath_rw import jsonpath, parse
 
-# A robust parser, not just a regex, makes powerful extensions possible
+# A robust parser, not just a regex. (Makes powerful extensions possible; see below)
 >>> jsonpath_expr = parse('foo[*].baz')
 
 # Extracting values is easy
