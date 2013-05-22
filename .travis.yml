@@ -7,4 +7,7 @@ python:
 install: 
  - "pip install . --use-mirrors"
  - "pip install pytest --use-mirrors"
-script: py.test
+ - "pip install coverage coveralls"
+script: coverage run setup.py test
+after_success:
+ - coveralls

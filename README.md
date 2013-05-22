@@ -3,7 +3,10 @@ Python JSONPath RW
 
 https://github.com/kennknowles/python-jsonpath-rw
 
-[![Build Status](https://travis-ci.org/kennknowles/python-jsonpath-rw.png)](https://travis-ci.org/kennknowles/python-jsonpath-rw)
+[![Build Status](https://travis-ci.org/kennknowles/python-jsonpath-rw.png?branch=master)](https://travis-ci.org/kennknowles/python-jsonpath-rw)
+[![Test coverage](https://coveralls.io/repos/kennknowles/python-jsonpath-rw/badge.png?branch=master)](https://coveralls.io/r/kennknowles/python-jsonpath-rw)
+[![PyPi version](https://pypip.in/v/jsonpath-rw/badge.png)](https://pypi.python.org/pypi/jsonpath-rw)
+[![PyPi downloads](https://pypip.in/d/jsonpath-rw/badge.png)](https://pypi.python.org/pypi/jsonpath-rw)
 
 This library provides a robust and significantly extended implementation of JSONPath for Python.
 It is tested with Python 2.6, 2.7, 3.2, and 3.3.
