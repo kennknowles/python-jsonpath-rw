@@ -1,5 +1,5 @@
-Python JSONPath Read/Write
-==========================
+Python JSONPath RW
+==================
 
 https://github.com/kennknowles/python-jsonpath-rw
 
