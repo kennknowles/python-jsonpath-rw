@@ -52,7 +52,6 @@ $ python
 >>> jsonpath_expr_direct = Fields('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
 ```
 
-
 JSONPath Syntax
 ---------------
 
@@ -150,6 +149,12 @@ you can probably use any of them successfully. Why not this one?
 The original proposal, as far as I know:
 
  * [JSONPath - XPath for JSON](http://goessner.net/articles/JSONPath/) by Stefan Goessner.
+
+Special note about PLY and docstrings
+-------------------------------------
+
+The main parsing toolkit underlying this library, [PLY](https://github.com/dabeaz/ply), does not work with
+docstrings removed. For example, `PYTHONOPTIMIZE=2` and `python -OO` will both cause a failure.
 
 
 Contributors
