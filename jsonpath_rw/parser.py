@@ -14,9 +14,16 @@ def parse(string):
     return JsonPathParser().parse(string)
 
 class JsonPathParser(object):
+    '''
+    An LALR-parser for JsonPath
+    '''
+    
     tokens = JsonPathLexer.tokens
 
     def __init__(self, debug=False, lexer_class=None):
+        if self.__doc__ == None:
+            raise Exception('Docstrings have been removed! By design of PLY, jsonpath-rw requires docstrings. You must not use PYTHONOPTIMIZE=2 or python -OO.')
+
         self.debug = debug
         self.lexer_class = lexer_class or JsonPathLexer # Crufty but works around statefulness in PLY
 
