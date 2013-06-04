@@ -19,7 +19,7 @@ except:
 
 setuptools.setup(
     name='jsonpath-rw',
-    version='1.1.3',
+    version='1.1.4',
     description='A robust and significantly extended implementation of JSONPath for Python, with a clear AST for metaprogramming.',
     author='Kenneth Knowles',
     author_email='kenn.knowles@gmail.com',
