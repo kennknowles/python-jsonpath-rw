@@ -48,6 +48,10 @@ $ python
 >>> [match.value for match in parse('foo[*].id').find({'foo': [{'id': 'bizzle'}, {'baz': 3}]})]
 ['foo.bizzle', 'foo.[1]']
 
+# A handy extension: named operators like `parent`
+>>> [match.value for match in parse('a.*.b.`parent`.c').find({'a': {'x': {'b': 1, 'c': 'number one'}, 'y': {'b': 2, 'c': 'number two'}}})]
+['number two', 'number one']
+
 # You can also build expressions directly quite easily 
 >>> jsonpath_expr_direct = Fields('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
 ```
