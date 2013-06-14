@@ -96,7 +96,7 @@ class JsonPathParser(object):
         if p[1] == 'this':
             p[0] = This()
         else:
-            raise Exception('Unknown named operator `%s` at %s:%s' % (t.value, t.lineno, t.col)) 
+            raise Exception('Unknown named operator `%s` at %s:%s' % (p[1], p.lineno(1), p.lexpos(1)))
 
     def p_jsonpath_root(self, p):
         "jsonpath : '$'"
