@@ -236,6 +236,27 @@ class Child(JSONPath):
     def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.left, self.right)
 
+class Parent(JSONPath):
+    """
+    JSONPath that matches the parent node of the current match.
+    Will crash if no such parent exists.
+    Available via named operator `parent`.
+    """
+
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        return [datum.context]
+
+    def __eq__(self, other):
+        return isinstance(other, Parent)
+
+    def __str__(self):
+        return '`parent`'
+
+    def __repr__(self):
+        return 'Parent()'
+        
+
 class Where(JSONPath):
     """
     JSONPath that first matches the left, and then
