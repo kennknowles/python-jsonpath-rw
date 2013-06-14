@@ -157,6 +157,10 @@ class TestJsonPath(unittest.TestCase):
             ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
         ])
 
+    def test_parent_value(self):
+        self.check_cases([('foo.baz.`parent`', {'foo': {'baz': 3}}, [{'baz': 3}]),
+                          ('foo.`parent`.foo.baz.`parent`.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
+
     #
     # Check that the paths for the data are correct.
     # FIXME: merge these tests with the above, since the inputs are the same anyhow
