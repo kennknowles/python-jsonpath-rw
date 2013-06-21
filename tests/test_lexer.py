@@ -4,7 +4,7 @@ import unittest
 
 from ply.lex import LexToken
 
-from jsonpath_rw.lexer import JsonPathLexer
+from jsonpath_rw.lexer import JsonPathLexer, JsonPathLexerError
 
 class TestLexer(unittest.TestCase):
 
@@ -47,3 +47,12 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('`this`', [self.token('this', 'NAMED_OPERATOR')])
         self.assert_lex_equiv('|', [self.token('|', '|')])
         self.assert_lex_equiv('where', [self.token('where', 'WHERE')])
+
+    def test_basic_errors(self):
+        def tokenize(s):
+            l = JsonPathLexer(debug=True)
+            return list(l.tokenize(s))
+        self.assertRaises(JsonPathLexerError, tokenize, "'\"")
+        self.assertRaises(JsonPathLexerError, tokenize, '"\'')
+        self.assertRaises(JsonPathLexerError, tokenize, '?')
+        self.assertRaises(JsonPathLexerError, tokenize, '$.foo.bar.#')
