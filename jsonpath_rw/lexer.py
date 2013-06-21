@@ -6,6 +6,9 @@ import ply.lex
 
 logger = logging.getLogger(__name__)
 
+class JsonPathLexerError(Exception):
+    pass
+
 class JsonPathLexer(object):
     '''
     A Lexical analyzer for JsonPath. 
@@ -14,7 +17,7 @@ class JsonPathLexer(object):
     def __init__(self, debug=False):
         self.debug = debug
         if self.__doc__ == None:
-            raise Exception('Docstrings have been removed! By design of PLY, jsonpath-rw requires docstrings. You must not use PYTHONOPTIMIZE=2 or python -OO.')
+            raise JsonPathLexerError('Docstrings have been removed! By design of PLY, jsonpath-rw requires docstrings. You must not use PYTHONOPTIMIZE=2 or python -OO.')
 
     def tokenize(self, string):
         '''
@@ -78,7 +81,7 @@ class JsonPathLexer(object):
         return t
 
     def t_singlequote_error(self, t):
-        raise Exception('Error on line %s, col %s while lexing singlequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
+        raise JsonPathLexerError('Error on line %s, col %s while lexing singlequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
 
 
     # Double-quoted strings
@@ -96,7 +99,7 @@ class JsonPathLexer(object):
         return t
 
     def t_doublequote_error(self, t):
-        raise Exception('Error on line %s, col %s while lexing doublequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
+        raise JsonPathLexerError('Error on line %s, col %s while lexing doublequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
 
     
     # Back-quoted "magic" operators
@@ -114,7 +117,7 @@ class JsonPathLexer(object):
         return t
 
     def t_backquote_error(self, t):
-        raise Exception('Error on line %s, col %s while lexing backquoted operator: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
+        raise JsonPathLexerError('Error on line %s, col %s while lexing backquoted operator: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
 
 
     # Counting lines, handling errors
@@ -124,7 +127,7 @@ class JsonPathLexer(object):
         t.lexer.latest_newline = t.lexpos
 
     def t_error(self, t):
-        raise Exception('Error on line %s, col %s: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
+        raise JsonPathLexerError('Error on line %s, col %s: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
 
 if __name__ == '__main__':
     logging.basicConfig()
