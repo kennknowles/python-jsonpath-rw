@@ -28,7 +28,9 @@ class TestParser(unittest.TestCase):
                                 ('[:]', Slice()),
                                 ('[*]', Slice()),
                                 ('[:2]', Slice(end=2)),
-                                ('[1:2]', Slice(start=1, end=2))])
+                                ('[1:2]', Slice(start=1, end=2)),
+                                ('[5:-2]', Slice(start=5, end=-2))
+                               ])
 
     def test_nested(self):
         self.check_parse_cases([('foo.baz', Child(Fields('foo'), Fields('baz'))),
