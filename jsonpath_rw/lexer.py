@@ -11,9 +11,9 @@ class JsonPathLexerError(Exception):
 
 class JsonPathLexer(object):
     '''
-    A Lexical analyzer for JsonPath. 
+    A Lexical analyzer for JsonPath.
     '''
-    
+
     def __init__(self, debug=False):
         self.debug = debug
         if self.__doc__ == None:
@@ -23,7 +23,7 @@ class JsonPathLexer(object):
         '''
         Maps a string to an iterator over tokens. In other words: [char] -> [token]
         '''
-        
+
         new_lexer = ply.lex.lex(module=self, debug=self.debug, errorlog=logger)
         new_lexer.latest_newline = 0
         new_lexer.input(string)
@@ -43,7 +43,7 @@ class JsonPathLexer(object):
     # Anyhow, it is pythonic to give some rope to hang oneself with :-)
 
     literals = ['*', '.', '[', ']', '(', ')', '$', ',', ':', '|', '&']
-    
+
     reserved_words = { 'where': 'WHERE' }
 
     tokens = ['DOUBLEDOT', 'NUMBER', 'ID', 'NAMED_OPERATOR'] + list(reserved_words.values())
@@ -62,7 +62,7 @@ class JsonPathLexer(object):
         return t
 
     def t_NUMBER(self, t):
-        r'\d+'
+        r'-?\d+'
         t.value = int(t.value)
         return t
 
@@ -101,7 +101,7 @@ class JsonPathLexer(object):
     def t_doublequote_error(self, t):
         raise JsonPathLexerError('Error on line %s, col %s while lexing doublequoted field: Unexpected character: %s ' % (t.lexer.lineno, t.lexpos - t.lexer.latest_newline, t.value[0]))
 
-    
+
     # Back-quoted "magic" operators
     t_backquote_ignore = ''
     def t_BACKQUOTE(self, t):

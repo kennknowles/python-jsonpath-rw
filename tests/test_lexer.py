@@ -15,7 +15,7 @@ class TestLexer(unittest.TestCase):
         t.lineno = -1
         t.lexpos = -1
         return t
-    
+
     def assert_lex_equiv(self, s, stream2):
         # NOTE: lexer fails to reset after call?
         l = JsonPathLexer(debug=True)
@@ -38,6 +38,8 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('fuzz', [self.token('fuzz', 'ID')])
         self.assert_lex_equiv('1', [self.token(1, 'NUMBER')])
         self.assert_lex_equiv('45', [self.token(45, 'NUMBER')])
+        self.assert_lex_equiv('-1', [self.token(-1, 'NUMBER')])
+        self.assert_lex_equiv(' -13 ', [self.token(-13, 'NUMBER')])
         self.assert_lex_equiv('"fuzz.bang"', [self.token('fuzz.bang', 'ID')])
         self.assert_lex_equiv('fuzz.bang', [self.token('fuzz', 'ID'), self.token('.', '.'), self.token('bang', 'ID')])
         self.assert_lex_equiv('fuzz.*', [self.token('fuzz', 'ID'), self.token('.', '.'), self.token('*', '*')])
