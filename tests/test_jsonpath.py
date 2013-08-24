@@ -5,6 +5,7 @@ from jsonpath_rw import jsonpath # For setting the global auto_id_field flag
 
 from jsonpath_rw.parser import parse
 from jsonpath_rw.jsonpath import *
+from jsonpath_rw.lexer import JsonPathLexerError
 
 class TestDatumInContext(unittest.TestCase):
     """
@@ -160,6 +161,16 @@ class TestJsonPath(unittest.TestCase):
     def test_parent_value(self):
         self.check_cases([('foo.baz.`parent`', {'foo': {'baz': 3}}, [{'baz': 3}]),
                           ('foo.`parent`.foo.baz.`parent`.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
+
+    def test_hyphen_key(self):
+        self.check_cases([('foo.bar-baz', {'foo': {'bar-baz': 3}}, [3]),
+            ('foo.[bar-baz,blah-blah]', {'foo': {'bar-baz': 3, 'blah-blah':5}},
+                [3,5])])
+        with self.assertRaises(JsonPathLexerError):
+            self.check_cases([('foo.-baz', {'foo': {'-baz': 8}}, [8])])
+
+
+
 
     #
     # Check that the paths for the data are correct.
