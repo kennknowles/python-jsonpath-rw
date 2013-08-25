@@ -166,8 +166,8 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([('foo.bar-baz', {'foo': {'bar-baz': 3}}, [3]),
             ('foo.[bar-baz,blah-blah]', {'foo': {'bar-baz': 3, 'blah-blah':5}},
                 [3,5])])
-        with self.assertRaises(JsonPathLexerError):
-            self.check_cases([('foo.-baz', {'foo': {'-baz': 8}}, [8])])
+        self.assertRaises(JsonPathLexerError, self.check_cases,
+                [('foo.-baz', {'foo': {'-baz': 8}}, [8])])
 
 
 
