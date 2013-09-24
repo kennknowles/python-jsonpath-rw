@@ -10,5 +10,9 @@
 /README.txt
 /dist
 /*.egg-info
-
+parser.out
 .coverage
+
+/jsonpath_rw/VERSION
+
+.idea
