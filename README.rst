@@ -185,8 +185,12 @@ cause a failure.
 Contributors
 ------------
 
+This package is authored and maintained by:
+
 -  `Kenn Knowles <https://github.com/kennknowles>`__
    (`@kennknowles <https://twitter.com/KennKnowles>`__)
+   
+with the help of patches submitted by `these contributors <https://github.com/kennknowles/python-jsonpath-rw/graphs/contributors>`__.
 
 Copyright and License
 ---------------------
