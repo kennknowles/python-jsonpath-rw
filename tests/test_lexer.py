@@ -35,6 +35,10 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('$', [self.token('$', '$')])
         self.assert_lex_equiv('"hello"', [self.token('hello', 'ID')])
         self.assert_lex_equiv("'goodbye'", [self.token('goodbye', 'ID')])
+        self.assert_lex_equiv("'doublequote\"'", [self.token('doublequote"', 'ID')])
+        self.assert_lex_equiv(r'"doublequote\""', [self.token('doublequote"', 'ID')])
+        self.assert_lex_equiv(r"'singlequote\''", [self.token("singlequote'", 'ID')])
+        self.assert_lex_equiv('"singlequote\'"', [self.token("singlequote'", 'ID')])
         self.assert_lex_equiv('fuzz', [self.token('fuzz', 'ID')])
         self.assert_lex_equiv('1', [self.token(1, 'NUMBER')])
         self.assert_lex_equiv('45', [self.token(45, 'NUMBER')])
@@ -54,7 +58,12 @@ class TestLexer(unittest.TestCase):
         def tokenize(s):
             l = JsonPathLexer(debug=True)
             return list(l.tokenize(s))
+
         self.assertRaises(JsonPathLexerError, tokenize, "'\"")
         self.assertRaises(JsonPathLexerError, tokenize, '"\'')
+        self.assertRaises(JsonPathLexerError, tokenize, '`"')
+        self.assertRaises(JsonPathLexerError, tokenize, "`'")
+        self.assertRaises(JsonPathLexerError, tokenize, '"`')
+        self.assertRaises(JsonPathLexerError, tokenize, "'`")
         self.assertRaises(JsonPathLexerError, tokenize, '?')
         self.assertRaises(JsonPathLexerError, tokenize, '$.foo.bar.#')

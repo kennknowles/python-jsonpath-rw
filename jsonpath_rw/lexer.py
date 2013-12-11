@@ -26,6 +26,7 @@ class JsonPathLexer(object):
 
         new_lexer = ply.lex.lex(module=self, debug=self.debug, errorlog=logger)
         new_lexer.latest_newline = 0
+        new_lexer.string_value = None
         new_lexer.input(string)
 
         while True:
@@ -33,6 +34,9 @@ class JsonPathLexer(object):
             if t is None: break
             t.col = t.lexpos - new_lexer.latest_newline
             yield t
+
+        if new_lexer.string_value is not None:
+            raise JsonPathLexerError('Unexpected EOF in string literal or identifier')
 
     # ============== PLY Lexer specification ==================
     #
@@ -66,17 +70,28 @@ class JsonPathLexer(object):
         t.value = int(t.value)
         return t
 
+
     # Single-quoted strings
     t_singlequote_ignore = ''
-    def t_SINGLEQUOTE(self, t):
-        r'\''
+    def t_singlequote(self, t):
+        r"'"
         t.lexer.string_start = t.lexer.lexpos
+        t.lexer.string_value = ''
         t.lexer.push_state('singlequote')
 
-    def t_singlequote_SINGLEQUOTE(self, t):
-        r"([^']|\\')*'"
-        t.value = t.value[:-1]
+    def t_singlequote_content(self, t):
+        r"[^'\\]+"
+        t.lexer.string_value += t.value
+
+    def t_singlequote_escape(self, t):
+        r'\\.'
+        t.lexer.string_value += t.value[1]
+
+    def t_singlequote_end(self, t):
+        r"'"
+        t.value = t.lexer.string_value
         t.type = 'ID'
+        t.lexer.string_value = None
         t.lexer.pop_state()
         return t
 
@@ -86,15 +101,25 @@ class JsonPathLexer(object):
 
     # Double-quoted strings
     t_doublequote_ignore = ''
-    def t_DOUBLEQUOTE(self, t):
+    def t_doublequote(self, t):
         r'"'
         t.lexer.string_start = t.lexer.lexpos
+        t.lexer.string_value = ''
         t.lexer.push_state('doublequote')
 
-    def t_doublequote_DOUBLEQUOTE(self, t):
-        r'([^"]|\\")*"'
-        t.value = t.value[:-1]
+    def t_doublequote_content(self, t):
+        r'[^"\\]+'
+        t.lexer.string_value += t.value
+
+    def t_doublequote_escape(self, t):
+        r'\\.'
+        t.lexer.string_value += t.value[1]
+
+    def t_doublequote_end(self, t):
+        r'"'
+        t.value = t.lexer.string_value
         t.type = 'ID'
+        t.lexer.string_value = None
         t.lexer.pop_state()
         return t
 
@@ -104,15 +129,25 @@ class JsonPathLexer(object):
 
     # Back-quoted "magic" operators
     t_backquote_ignore = ''
-    def t_BACKQUOTE(self, t):
+    def t_backquote(self, t):
         r'`'
         t.lexer.string_start = t.lexer.lexpos
+        t.lexer.string_value = ''
         t.lexer.push_state('backquote')
 
-    def t_backquote_BACKQUOTE(self, t):
-        r'([^`]|\\`)*`'
-        t.value = t.value[:-1]
+    def t_backquote_escape(self, t):
+        r'\\.'
+        t.lexer.string_value += t.value[1]
+
+    def t_backquote_content(self, t):
+        r"[^`\\]+"
+        t.lexer.string_value += t.value
+
+    def t_backquote_end(self, t):
+        r'`'
+        t.value = t.lexer.string_value
         t.type = 'NAMED_OPERATOR'
+        t.lexer.string_value = None
         t.lexer.pop_state()
         return t
 
