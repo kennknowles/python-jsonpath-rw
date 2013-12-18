@@ -6,7 +6,7 @@ import subprocess
 
 setuptools.setup(
     name='jsonpath-rw',
-    version='1.2.3a1',
+    version='1.2.3',
     description='A robust and significantly extended implementation of JSONPath for Python, with a clear AST for metaprogramming.',
     author='Kenneth Knowles',
     author_email='kenn.knowles@gmail.com',
