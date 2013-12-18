@@ -1,3 +1,4 @@
 from .jsonpath import *
 from .parser import parse
-from .version import __version__
+
+__version__ = '1.2.3a1'
