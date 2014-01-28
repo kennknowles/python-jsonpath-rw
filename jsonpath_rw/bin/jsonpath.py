@@ -10,8 +10,10 @@ import json
 import sys
 import glob
 if len(sys.argv) < 2:
-    print("""usage: %s jsonpath [files]
-path can be:
+    print("""usage: jsonpath.py expression [files]
+
+The expression is JSONPath and can be:
+
     atomics:
         $              - root object
         `this`         - current object
