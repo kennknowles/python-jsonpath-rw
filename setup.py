@@ -14,6 +14,7 @@ setuptools.setup(
     license='Apache 2.0',
     long_description=io.open('README.rst', encoding='utf-8').read(),
     packages = ['jsonpath_rw'],
+    scripts = ['jsonpath_rw/bin/jsonpath.py'],
     test_suite = 'tests',
     install_requires = [ 'ply', 'decorator', 'six' ],
     classifiers = [
