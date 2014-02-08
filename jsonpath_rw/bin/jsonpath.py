@@ -5,47 +5,67 @@
 # terms of the Do What The Fuck You Want To Public License, Version 2,
 # as published by Sam Hocevar. See the COPYING file for more details.
 
-from jsonpath_rw import parse
+# Use modern Python
+from __future__ import unicode_literals, print_function, absolute_import
+
+# Standard Library imports
 import json
 import sys
 import glob
-if len(sys.argv) < 2:
-    print("""usage: jsonpath.py expression [files]
+import argparse
 
-The expression is JSONPath and can be:
+# JsonPath-RW imports
+from jsonpath_rw import parse
 
-    atomics:
-        $              - root object
-        `this`         - current object
-
-    operators:
-        path1.path2    - same as xpath /
-        path1|path2    - union
-        path1..path2   - somewhere in between
-
-    fiels:
-        fieldname       - field with name
-        *               - any field
-        [_start_?:_end_?] - array slice
-        [*]             - any array index
-""")
-    sys.exit(1)
-
-expr = parse(sys.argv[1])
-
-def find_matches_for_file(f):
-    return [unicode(match.value) for match in expr.find(json.load(f))]
+def find_matches_for_file(expr, f):
+    return expr.find(json.load(f))
 
 def print_matches(matches):
-    print(u"\n".join(matches).encode("utf-8"))
+    print('\n'.join(['{0}'.format(match.value) for match in matches]))
 
-if len(sys.argv) < 3:
-    # stdin mode
-    print_matches(find_matches_for_file(sys.stdin))
-else:
-    # file paths mode
-    for pattern in sys.argv[2:]:
-        for filename in glob.glob(pattern):
-            with open(filename) as f:
-                print_matches(find_matches_for_file(f))
 
+def main(*argv):
+    parser = argparse.ArgumentParser(
+        description='Search JSON files (or stdin) according to a JSONPath expression.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""
+        Quick JSONPath reference (see more at https://github.com/kennknowles/python-jsonpath-rw)
+
+        atomics:
+            $              - root object
+            `this`         - current object
+
+        operators:
+            path1.path2    - same as xpath /
+            path1|path2    - union
+            path1..path2   - somewhere in between
+
+        fields:
+            fieldname       - field with name
+            *               - any field
+            [_start_?:_end_?] - array slice
+            [*]             - any array index
+    """)
+
+
+
+    parser.add_argument('expression', help='A JSONPath expression.')
+    parser.add_argument('files', metavar='file', nargs='*', help='Files to search (if none, searches stdin)')
+
+    args = parser.parse_args(argv[1:])
+
+    expr = parse(args.expression)
+    glob_patterns = args.files
+
+    if len(glob_patterns) == 0:
+        # stdin mode
+        print_matches(find_matches_for_file(expr, sys.stdin))
+    else:
+        # file paths mode
+        for pattern in glob_patterns:
+            for filename in glob.glob(pattern):
+                with open(filename) as f:
+                    print_matches(find_matches_for_file(expr, f))
+
+def entry_point():
+    main(*sys.argv)
