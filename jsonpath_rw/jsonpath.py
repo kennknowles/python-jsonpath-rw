@@ -416,7 +416,7 @@ class Fields(JSONPath):
                  if field_datum is not None]
 
     def __str__(self):
-        return ','.join(self.fields)
+        return ','.join(map(str, self.fields))
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
