@@ -52,6 +52,9 @@ Then:
     ['number two', 'number one']
 
     # You can also build expressions directly quite easily 
+    >>> from jsonpath_rw.jsonpath import Fields
+    >>> from jsonpath_rw.jsonpath import Slice
+
     >>> jsonpath_expr_direct = Fields('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
 
 JSONPath Syntax
