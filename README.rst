@@ -99,9 +99,8 @@ Jsonpath operators:
 +-------------------------------------+------------------------------------------------------------------------------------+
 | *jsonpath1* ``where`` *jsonpath2*   | Any nodes matching *jsonpath1* with a child matching *jsonpath2*                   |
 +-------------------------------------+------------------------------------------------------------------------------------+
-
-Also *jsonpath1* ``|`` *jsonpath2* for union (but I have not convinced
-Github-Flavored Markdown to allow me to put that in a table)
+| *jsonpath1* ``|`` *jsonpath2*       | Any nodes matching the union of *jsonpath1* and *jsonpath2*                        |
++-------------------------------------+------------------------------------------------------------------------------------+
 
 Field specifiers ( *field* ):
 
