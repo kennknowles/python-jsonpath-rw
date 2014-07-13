@@ -184,11 +184,11 @@ class TestJsonPath(unittest.TestCase):
             print('parse("%s").find(%s).paths =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
-                assert [str(r.full_path) for r in result] == target
+                assert [unicode(r.full_path) for r in result] == target
             elif isinstance(target, set):
-                assert set([str(r.full_path) for r in result]) == target
+                assert set([unicode(r.full_path) for r in result]) == target
             else:
-                assert str(result.path) == target
+                assert unicode(result.path) == target
 
     def test_fields_paths(self):
         jsonpath.auto_id_field = None

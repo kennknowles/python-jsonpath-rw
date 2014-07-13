@@ -95,7 +95,7 @@ class DatumInContext(object):
         Looks like a path, but with ids stuck in when available
         """
         try:
-            pseudopath = Fields(str(self.value[auto_id_field]))
+            pseudopath = Fields(unicode(self.value[auto_id_field]))
         except (TypeError, AttributeError, KeyError): # This may not be all the interesting exceptions
             pseudopath = self.path
 
@@ -139,7 +139,7 @@ class AutoIdForDatum(DatumInContext):
 
     @property
     def value(self):
-        return str(self.datum.id_pseudopath)
+        return unicode(self.datum.id_pseudopath)
 
     @property
     def path(self):
@@ -416,7 +416,10 @@ class Fields(JSONPath):
                  if field_datum is not None]
 
     def __str__(self):
-        return ','.join(map(str, self.fields))
+	return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return ','.join(map(unicode, self.fields))
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
