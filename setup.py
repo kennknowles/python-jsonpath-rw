@@ -13,7 +13,7 @@ setuptools.setup(
     url='https://github.com/kennknowles/python-jsonpath-rw',
     license='Apache 2.0',
     long_description=io.open('README.rst', encoding='utf-8').read(),
-    packages = ['jsonpath_rw'],
+    packages = ['jsonpath_rw', 'jsonpath_rw.bin'],
     entry_points = {
         'console_scripts':  ['jsonpath.py = jsonpath_rw.bin.jsonpath:entry_point'],
     },
