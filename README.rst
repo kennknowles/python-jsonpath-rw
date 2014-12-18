@@ -25,7 +25,7 @@ To install, use pip:
 
 Then:
 
-::
+.. code:: python
 
     $ python
 
