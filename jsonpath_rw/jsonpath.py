@@ -95,8 +95,8 @@ class DatumInContext(object):
         Looks like a path, but with ids stuck in when available
         """
         try:
-            pseudopath = Fields(str(self.value[auto_id_field]))
-        except (TypeError, AttributeError, KeyError): # This may not be all the interesting exceptions
+            pseudopath = Fields(unicode(self.value[auto_id_field]))
+        except (TypeError, AttributeError, KeyError):  # This may not be all the interesting exceptions
             pseudopath = self.path
 
         if self.context:
@@ -139,7 +139,7 @@ class AutoIdForDatum(DatumInContext):
 
     @property
     def value(self):
-        return str(self.datum.id_pseudopath)
+        return unicode(self.datum.id_pseudopath)
 
     @property
     def path(self):
@@ -393,7 +393,7 @@ class Fields(JSONPath):
             return AutoIdForDatum(datum)
         else:
             try:
-                field_value = datum.value[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
+                field_value = datum.value[field]  # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
                 return DatumInContext(value=field_value, path=Fields(field), context=datum)
             except (TypeError, KeyError, AttributeError):
                 return None
@@ -409,14 +409,17 @@ class Fields(JSONPath):
                 return ()
 
     def find(self, datum):
-        datum  = DatumInContext.wrap(datum)
+        datum = DatumInContext.wrap(datum)
         
         return  [field_datum
                  for field_datum in [self.get_field_datum(datum, field) for field in self.reified_fields(datum)]
                  if field_datum is not None]
 
     def __str__(self):
-        return ','.join(map(str, self.fields))
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        return ','.join(map(unicode, self.fields))
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
@@ -499,9 +502,9 @@ class Slice(JSONPath):
         if self.start == None and self.end == None and self.step == None:
             return '[*]'
         else:
-            return '[%s%s%s]' % (self.start or '', 
-                                   ':%d'%self.end if self.end else '',
-                                   ':%d'%self.step if self.step else '')
+            return '[%s%s%s]' % (self.start or '',
+                                   ':%d' % self.end if self.end else '',
+                                   ':%d' % self.step if self.step else '')
 
     def __repr__(self):
         return '%s(start=%r,end=%r,step=%r)' % (self.__class__.__name__, self.start, self.end, self.step)

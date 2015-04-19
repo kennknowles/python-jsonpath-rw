@@ -1,7 +1,7 @@
 from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import unittest
 
-from jsonpath_rw import jsonpath # For setting the global auto_id_field flag
+from jsonpath_rw import jsonpath  # For setting the global auto_id_field flag
 
 from jsonpath_rw.parser import parse
 from jsonpath_rw.jsonpath import *
@@ -37,11 +37,11 @@ class TestDatumInContext(unittest.TestCase):
     def test_DatumInContext_in_context(self):
 
         assert (DatumInContext(3).in_context(path=Fields('foo'), context=DatumInContext('whatever'))
-                ==
+                == 
                 DatumInContext(3, path=Fields('foo'), context=DatumInContext('whatever')))
 
         assert (DatumInContext(3).in_context(path=Fields('foo'), context='whatever').in_context(path=Fields('baz'), context='whatever')
-                ==
+                == 
                 DatumInContext(3).in_context(path=Fields('foo'), context=DatumInContext('whatever').in_context(path=Fields('baz'), context='whatever')))
 
     # def test_AutoIdForDatum_pseudopath(self):
@@ -141,10 +141,10 @@ class TestJsonPath(unittest.TestCase):
 
         # Funky slice hacks
         self.check_cases([
-            ('[*]', 1, [1]), # This is a funky hack
-            ('[0:]', 1, [1]), # This is a funky hack
-            ('[*]', {'foo':1}, [{'foo': 1}]), # This is a funky hack
-            ('[*].foo', {'foo':1}, [1]), # This is a funky hack
+            ('[*]', 1, [1]),  # This is a funky hack
+            ('[0:]', 1, [1]),  # This is a funky hack
+            ('[*]', {'foo':1}, [{'foo': 1}]),  # This is a funky hack
+            ('[*].foo', {'foo':1}, [1]),  # This is a funky hack
         ])
 
     def test_child_value(self):
@@ -154,8 +154,8 @@ class TestJsonPath(unittest.TestCase):
 
     def test_descendants_value(self):
         self.check_cases([ 
-            ('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2] ),
-            ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
+            ('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2]),
+            ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2]),
         ])
 
     def test_parent_value(self):
@@ -165,7 +165,7 @@ class TestJsonPath(unittest.TestCase):
     def test_hyphen_key(self):
         self.check_cases([('foo.bar-baz', {'foo': {'bar-baz': 3}}, [3]),
             ('foo.[bar-baz,blah-blah]', {'foo': {'bar-baz': 3, 'blah-blah':5}},
-                [3,5])])
+                [3, 5])])
         self.assertRaises(JsonPathLexerError, self.check_cases,
                 [('foo.-baz', {'foo': {'-baz': 8}}, [8])])
 
@@ -184,11 +184,11 @@ class TestJsonPath(unittest.TestCase):
             print('parse("%s").find(%s).paths =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
-                assert [str(r.full_path) for r in result] == target
+                assert [unicode(r.full_path) for r in result] == target
             elif isinstance(target, set):
-                assert set([str(r.full_path) for r in result]) == target
+                assert set([unicode(r.full_path) for r in result]) == target
             else:
-                assert str(result.path) == target
+                assert unicode(result.path) == target
 
     def test_fields_paths(self):
         jsonpath.auto_id_field = None
@@ -229,7 +229,7 @@ class TestJsonPath(unittest.TestCase):
                           ('foo.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, ['foo.baz.bizzle'])])
 
     def test_descendants_paths(self):
-        self.check_paths([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, ['foo.baz', 'foo.bing.baz'] )])
+        self.check_paths([('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, ['foo.baz', 'foo.bing.baz'])])
 
 
     #
@@ -240,7 +240,7 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([ ('foo.id', {'foo': 'baz'}, ['foo']),
                            ('foo.id', {'foo': {'id': 'baz'}}, ['baz']),
                            ('foo,baz.id', {'foo': 1, 'baz': 2}, ['foo', 'baz']),
-                           ('*.id', 
+                           ('*.id',
                             {'foo':{'id': 1},
                              'baz': 2},
                              set(['1', 'baz'])) ])
@@ -248,15 +248,15 @@ class TestJsonPath(unittest.TestCase):
     def test_root_auto_id(self):
         jsonpath.auto_id_field = 'id'
         self.check_cases([ 
-            ('$.id', {'foo': 'baz'}, ['$']), # This is a wonky case that is not that interesting
-            ('foo.$.id', {'foo': 'baz', 'id': 'bizzle'}, ['bizzle']), 
+            ('$.id', {'foo': 'baz'}, ['$']),  # This is a wonky case that is not that interesting
+            ('foo.$.id', {'foo': 'baz', 'id': 'bizzle'}, ['bizzle']),
             ('foo.$.baz.id', {'foo': 4, 'baz': 3}, ['baz']),
         ])
 
     def test_this_auto_id(self):
         jsonpath.auto_id_field = 'id'
         self.check_cases([ 
-            ('id', {'foo': 'baz'}, ['`this`']), # This is, again, a wonky case that is not that interesting
+            ('id', {'foo': 'baz'}, ['`this`']),  # This is, again, a wonky case that is not that interesting
             ('foo.`this`.id', {'foo': 'baz'}, ['foo']),
             ('foo.`this`.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
         ])
@@ -281,12 +281,12 @@ class TestJsonPath(unittest.TestCase):
 
     def test_descendants_auto_id(self):
         jsonpath.auto_id_field = "id"
-        self.check_cases([('foo..baz.id', 
+        self.check_cases([('foo..baz.id',
                            {'foo': {
-                               'baz': 1, 
+                               'baz': 1,
                                'bing': {
                                    'baz': 2
                                 }
                              } },
-                             ['foo.baz', 
-                              'foo.bing.baz'] )])
+                             ['foo.baz',
+                              'foo.bing.baz'])])
