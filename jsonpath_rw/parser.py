@@ -95,6 +95,8 @@ class JsonPathParser(object):
         "jsonpath : NAMED_OPERATOR"
         if p[1] == 'this':
             p[0] = This()
+        elif p[1] == 'sorted':
+            p[0] = SortedThis()
         elif p[1] == 'parent':
             p[0] = Parent()
         else:

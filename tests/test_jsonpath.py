@@ -105,7 +105,10 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
                            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
                            ('@foo', {'@foo': 1}, [1]),
-                           ('*', {'foo': 1, 'baz': 2}, set([1, 2])) ])
+                           ('*', {'foo': 1, 'baz': 2}, set([1, 2])),
+                           ('objects.`sorted`', {'objects': ['alpha', 'gamma', 'beta']}, ['alpha', 'beta', 'gamma']),
+                           ('objects.`sorted`', {'objects': {'cow': 'moo', 'horse': 'neigh', 'cat': 'meow'}}, ['cat', 'cow', 'horse']),
+                           ])
 
         jsonpath.auto_id_field = 'id'
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '`this`'])) ])

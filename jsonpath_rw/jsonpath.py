@@ -206,6 +206,14 @@ class This(JSONPath):
     def __eq__(self, other):
         return isinstance(other, This)
 
+class SortedThis(This):
+
+    def find(self, datum):
+        """Return sorted value of This if list or dict."""
+        if isinstance(datum.value, dict) or isinstance(datum.value, list):
+            return [DatumInContext.wrap(value) for value in sorted(datum.value)]
+        return datum
+
 class Child(JSONPath):
     """
     JSONPath that first matches the left, then the right.
