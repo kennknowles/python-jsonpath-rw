@@ -187,6 +187,41 @@ class JsonPathParser(object):
         sort = Sorted(p[3])
         p[0] = Child(p[1], sort)
 
+    def p_jsonpath_this(self, p):
+        "jsonpath : '@'"
+        p[0] = This()
+
+    def p_expression(self, p):
+        """expression : jsonpath
+                      | jsonpath FILTER_OP ID
+                      | jsonpath FILTER_OP NUMBER
+        """
+        if len(p) == 2:
+            left, op, right = p[1], None, None
+        else:
+            __, left, op, right = p
+        p[0] = FilterExpression(left, op, right)
+
+    def p_expressions_expression(self, p):
+        "expressions : expression"
+        p[0] = [p[1]]
+
+    def p_expressions_and(self, p):
+        "expressions : expressions '&' expressions"
+        p[0] = p[1] + p[3]
+
+    def p_expressions_parens(self, p):
+        "expressions : '(' expressions ')'"
+        p[0] = p[2]
+
+    def p_filter(self, p):
+        "filter : '?' expressions "
+        p[0] = Filter(p[2])
+
+    def p_jsonpath_filter(self, p):
+        "jsonpath : jsonpath '[' filter ']'"
+        p[0] = Child(p[1], p[3])
+
 
 class IteratorToTokenStream(object):
     def __init__(self, iterator):

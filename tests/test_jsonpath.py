@@ -127,6 +127,19 @@ class TestJsonPath(unittest.TestCase):
              [{'cat': {'dog': 2, 'cow': 1}}, {'cat': {'dog': 2, 'bow': 2}}, {'cat': {'dog': 3, 'cow': 2}}, {'cat': {'dog': 1, 'bow': 3}}]),
         ])
 
+    def test_filter_value(self):
+        jsonpath.auto_id_field = None
+        self.check_cases([
+            ('objects[?cow]', {'objects': [{'cow': 'moo'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?@.cow]', {'objects': [{'cow': 'moo'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?(@.cow)]', {'objects': [{'cow': 'moo'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?(@."cow!?cat")]', {'objects': [{'cow!?cat': 'moo'}, {'cat': 'neigh'}]}, [{'cow!?cat': 'moo'}]),
+            ('objects[?cow="moo"]', {'objects': [{'cow': 'moo'}, {'cow': 'neigh'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?(@.["cow"]="moo")]', {'objects': [{'cow': 'moo'}, {'cow': 'neigh'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?cow=="moo"]', {'objects': [{'cow': 'moo'}, {'cow': 'neigh'}, {'cat': 'neigh'}]}, [{'cow': 'moo'}]),
+            ('objects[?cow>5]', {'objects': [{'cow': 8}, {'cow': 7}, {'cow': 5}, {'cow': 'neigh'}]}, [{'cow': 8}, {'cow': 7}]),
+            ('objects[?cow>5&cat=2]', {'objects': [{'cow': 8, 'cat': 2}, {'cow': 7, 'cat': 2}, {'cow': 2, 'cat': 2}, {'cow': 5, 'cat': 3}, {'cow': 8, 'cat': 3}]}, [{'cow': 8, 'cat': 2}, {'cow': 7, 'cat': 2}]),
+        ])
 
     def test_root_value(self):
         jsonpath.auto_id_field = None

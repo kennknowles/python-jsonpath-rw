@@ -49,12 +49,20 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('fuzz.*', [self.token('fuzz', 'ID'), self.token('.', '.'), self.token('*', '*')])
         self.assert_lex_equiv('fuzz..bang', [self.token('fuzz', 'ID'), self.token('..', 'DOUBLEDOT'), self.token('bang', 'ID')])
         self.assert_lex_equiv('&', [self.token('&', '&')])
-        self.assert_lex_equiv('@', [self.token('@', 'ID')])
+        self.assert_lex_equiv('@', [self.token('@', '@')])
+        self.assert_lex_equiv('?', [self.token('?', '?')])
         self.assert_lex_equiv('`this`', [self.token('this', 'NAMED_OPERATOR')])
         self.assert_lex_equiv('|', [self.token('|', '|')])
         self.assert_lex_equiv('where', [self.token('where', 'WHERE')])
         self.assert_lex_equiv('/', [self.token('/', 'SORT_DIRECTION')])
         self.assert_lex_equiv('\\', [self.token('\\', 'SORT_DIRECTION')])
+        self.assert_lex_equiv('==', [self.token('==', 'FILTER_OP')])
+        self.assert_lex_equiv('=', [self.token('=', 'FILTER_OP')])
+        self.assert_lex_equiv('<=', [self.token('<=', 'FILTER_OP')])
+        self.assert_lex_equiv('<', [self.token('<', 'FILTER_OP')])
+        self.assert_lex_equiv('>=', [self.token('>=', 'FILTER_OP')])
+        self.assert_lex_equiv('>', [self.token('>', 'FILTER_OP')])
+        self.assert_lex_equiv('!=', [self.token('!=', 'FILTER_OP')])
 
     def test_basic_errors(self):
         def tokenize(s):
@@ -67,5 +75,4 @@ class TestLexer(unittest.TestCase):
         self.assertRaises(JsonPathLexerError, tokenize, "`'")
         self.assertRaises(JsonPathLexerError, tokenize, '"`')
         self.assertRaises(JsonPathLexerError, tokenize, "'`")
-        self.assertRaises(JsonPathLexerError, tokenize, '?')
         self.assertRaises(JsonPathLexerError, tokenize, '$.foo.bar.#')
