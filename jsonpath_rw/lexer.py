@@ -50,7 +50,7 @@ class JsonPathLexer(object):
 
     reserved_words = { 'where': 'WHERE' }
 
-    tokens = ['DOUBLEDOT', 'NUMBER', 'ID', 'NAMED_OPERATOR'] + list(reserved_words.values())
+    tokens = ['DOUBLEDOT', 'NUMBER', 'ID', 'NAMED_OPERATOR', 'SORT_DIRECTION'] + list(reserved_words.values())
 
     states = [ ('singlequote', 'exclusive'),
                ('doublequote', 'exclusive'),
@@ -70,6 +70,10 @@ class JsonPathLexer(object):
         t.value = int(t.value)
         return t
 
+    def t_SORT_DIRECTION(self, t):
+        r',?\s*(/|\\)'
+        t.value = t.value[-1]
+        return t
 
     # Single-quoted strings
     t_singlequote_ignore = ''

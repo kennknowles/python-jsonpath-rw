@@ -110,6 +110,24 @@ class TestJsonPath(unittest.TestCase):
         jsonpath.auto_id_field = 'id'
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '`this`'])) ])
 
+    def test_sort_value(self):
+        jsonpath.auto_id_field = None
+        self.check_cases([
+            ('objects[/cow]', {'objects': [{'cat': 1, 'cow': 2}, {'cat': 2, 'cow': 1}, {'cat': 3, 'cow': 3}]},
+             [{'cat': 2, 'cow': 1}, {'cat': 1, 'cow': 2}, {'cat': 3, 'cow': 3}]),
+            ('objects[\cat]', {'objects': [{'cat': 2}, {'cat': 1}, {'cat': 3}]},
+             [{'cat': 3}, {'cat': 2}, {'cat': 1}]),
+            ('objects[/cow,\cat]', {'objects': [{'cat': 1, 'cow': 2}, {'cat': 2, 'cow': 1}, {'cat': 3, 'cow': 1}, {'cat': 3, 'cow': 3}]},
+             [{'cat': 3, 'cow': 1}, {'cat': 2, 'cow': 1}, {'cat': 1, 'cow': 2}, {'cat': 3, 'cow': 3}]),
+            ('objects[\cow , /cat]', {'objects': [{'cat': 1, 'cow': 2}, {'cat': 2, 'cow': 1}, {'cat': 3, 'cow': 1}, {'cat': 3, 'cow': 3}]},
+             [{'cat': 3, 'cow': 3}, {'cat': 1, 'cow': 2}, {'cat': 2, 'cow': 1}, {'cat': 3, 'cow': 1}]),
+            ('objects[/cat.cow]', {'objects': [{'cat': {'dog': 1, 'cow': 2}}, {'cat': {'dog': 2, 'cow': 1}}, {'cat': {'dog': 3, 'cow': 3}}]},
+             [{'cat': {'dog': 2, 'cow': 1}}, {'cat': {'dog': 1, 'cow': 2}}, {'cat': {'dog': 3, 'cow': 3}}]),
+            ('objects[/cat.(cow,bow)]', {'objects': [{'cat': {'dog': 1, 'bow': 3}}, {'cat': {'dog': 2, 'cow': 1}}, {'cat': {'dog': 2, 'bow': 2}}, {'cat': {'dog': 3, 'cow': 2}}]},
+             [{'cat': {'dog': 2, 'cow': 1}}, {'cat': {'dog': 2, 'bow': 2}}, {'cat': {'dog': 3, 'cow': 2}}, {'cat': {'dog': 1, 'bow': 3}}]),
+        ])
+
+
     def test_root_value(self):
         jsonpath.auto_id_field = None
         self.check_cases([ 

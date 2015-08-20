@@ -53,6 +53,8 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('`this`', [self.token('this', 'NAMED_OPERATOR')])
         self.assert_lex_equiv('|', [self.token('|', '|')])
         self.assert_lex_equiv('where', [self.token('where', 'WHERE')])
+        self.assert_lex_equiv('/', [self.token('/', 'SORT_DIRECTION')])
+        self.assert_lex_equiv('\\', [self.token('\\', 'SORT_DIRECTION')])
 
     def test_basic_errors(self):
         def tokenize(s):

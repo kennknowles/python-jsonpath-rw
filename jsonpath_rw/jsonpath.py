@@ -3,6 +3,7 @@ import logging
 import six
 from six.moves import xrange
 from itertools import *
+import functools
 
 logger = logging.getLogger(__name__)
 
@@ -508,3 +509,57 @@ class Slice(JSONPath):
 
     def __eq__(self, other):
         return isinstance(other, Slice) and other.start == self.start and self.end == other.end and other.step == self.step
+
+
+class Sorted(JSONPath):
+    """The JSONPath referring to the sorted version of the current object.
+
+    Concrete syntax is [\\field] , [/field] or [\\field,/field].
+    """
+    def __init__(self, expressions=None):
+        self.expressions = expressions
+
+    def _compare(self, left, right):
+        left = DatumInContext.wrap(left)
+        right = DatumInContext.wrap(right)
+
+        for expr in self.expressions:
+            field, reverse = expr
+            l_datum = field.find(left)
+            r_datum = field.find(right)
+            if (not l_datum or not r_datum or
+                    len(l_datum) > 1 or len(r_datum) > 1 or
+                    l_datum[0].value == r_datum[0].value):
+                # NOTE(sileht): should we do something if the expression
+                # match multiple fields, for now ignore them
+                continue
+            elif l_datum[0].value < r_datum[0].value:
+                return 1 if reverse else -1
+            else:
+                return -1 if reverse else 1
+        return 0
+
+    def find(self, datum):
+        """Return sorted value of This if list or dict."""
+        if isinstance(datum.value, dict) and self.expressions:
+            return datum
+
+        if isinstance(datum.value, dict) or isinstance(datum.value, list):
+            kwargs = {}
+            if self.expressions:
+                if six.PY3:
+                    kwargs['key'] = functools.cmp_to_key(self._compare)
+                else:
+                    kwargs['cmp'] = self._compare
+            return [DatumInContext.wrap(value)
+                    for value in sorted(datum.value, **kwargs)]
+        return datum
+
+    def __eq__(self, other):
+        return isinstance(other, Len)
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, self.expressions)
+
+    def __str__(self):
+        return '[?%s]' % self.expressions

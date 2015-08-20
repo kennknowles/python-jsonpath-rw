@@ -170,6 +170,24 @@ class JsonPathParser(object):
         'empty :'
         p[0] = None
 
+    def p_sort(self, p):
+        "sort : SORT_DIRECTION jsonpath"
+        p[0] = (p[2], p[1] != "/")
+
+    def p_sorts_sort(self, p):
+        "sorts : sort"
+        p[0] = [p[1]]
+
+    def p_sorts_comma(self, p):
+        "sorts : sorts sorts"
+        p[0] = p[1] + p[2]
+
+    def p_jsonpath_sort(self, p):
+        "jsonpath : jsonpath '[' sorts ']'"
+        sort = Sorted(p[3])
+        p[0] = Child(p[1], sort)
+
+
 class IteratorToTokenStream(object):
     def __init__(self, iterator):
         self.iterator = iterator
