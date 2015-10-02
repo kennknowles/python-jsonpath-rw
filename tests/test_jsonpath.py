@@ -130,7 +130,8 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([
             ('[0]', [42], [42]),
             ('[5]', [42], []),
-            ('[2]', [34, 65, 29, 59], [29])
+            ('[2]', [34, 65, 29, 59], [29]),
+            ('[0]', None, [])
         ])
 
     def test_slice_value(self):
