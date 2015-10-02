@@ -430,7 +430,7 @@ class Index(JSONPath):
     JSONPath that matches indices of the current datum, or none if not large enough.
     Concrete syntax is brackets. 
 
-    WARNING: If the datum is not long enough, it will not crash but will not match anything.
+    WARNING: If the datum is None or not long enough, it will not crash but will not match anything.
     NOTE: For the concrete syntax of `[*]`, the abstract syntax is a Slice() with no parameters (equiv to `[:]`
     """
 
@@ -440,7 +440,7 @@ class Index(JSONPath):
     def find(self, datum):
         datum = DatumInContext.wrap(datum)
         
-        if len(datum.value) > self.index:
+        if datum.value and len(datum.value) > self.index:
             return [DatumInContext(datum.value[self.index], path=self, context=datum)]
         else:
             return []
