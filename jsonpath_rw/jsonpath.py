@@ -26,7 +26,11 @@ class JSONPath(object):
         raise NotImplementedError()
 
     def update(self, data, val):
-        "Returns `data` with the specified path replaced by `val`"
+        """
+        Returns `data` with the specified path replaced by `val`. Only updates
+        if the specified path exists.
+        """
+
         raise NotImplementedError()
 
     def child(self, child):
@@ -227,6 +231,11 @@ class Child(JSONPath):
                 if not isinstance(subdata, AutoIdForDatum)
                 for submatch in self.right.find(subdata)]
 
+    def update(self, data, val):
+        for datum in self.left.find(data):
+            self.right.update(datum.value, val)
+        return data
+
     def __eq__(self, other):
         return isinstance(other, Child) and self.left == other.left and self.right == other.right
 
@@ -273,6 +282,11 @@ class Where(JSONPath):
 
     def find(self, data):
         return [subdata for subdata in self.left.find(data) if self.right.find(subdata)]
+
+    def update(self, data, val):
+        for datum in self.find(data):
+            datum.path.update(data, val)
+        return data
 
     def __str__(self):
         return '%s where %s' % (self.left, self.right)
@@ -328,6 +342,33 @@ class Descendants(JSONPath):
             
     def is_singular():
         return False
+
+    def update(self, data, val):
+        # Get all left matches into a list
+        left_matches = self.left.find(data)
+        if not isinstance(left_matches, list):
+            left_matches = [left_matches]
+
+        def update_recursively(data):
+            # Update only mutable values corresponding to JSON types
+            if not (isinstance(data, list) or isinstance(data, dict)):
+                return
+
+            self.right.update(data, val)
+
+            # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
+            if isinstance(data, list):
+                for i in range(0, len(data)):
+                    update_recursively(data[i])
+
+            elif isinstance(data, dict):
+                for field in data.keys():
+                    update_recursively(data[field])
+
+        for submatch in left_matches:
+            update_recursively(submatch.value)
+
+        return data
 
     def __str__(self):
         return '%s..%s' % (self.left, self.right)
@@ -415,6 +456,12 @@ class Fields(JSONPath):
                  for field_datum in [self.get_field_datum(datum, field) for field in self.reified_fields(datum)]
                  if field_datum is not None]
 
+    def update(self, data, val):
+        for field in self.reified_fields(DatumInContext.wrap(data)):
+            if field in data:
+                data[field] = val
+        return data
+
     def __str__(self):
         return ','.join(map(str, self.fields))
 
@@ -444,6 +491,11 @@ class Index(JSONPath):
             return [DatumInContext(datum.value[self.index], path=self, context=datum)]
         else:
             return []
+
+    def update(self, data, val):
+        if len(data) > self.index:
+            data[self.index] = val
+        return data
 
     def __eq__(self, other):
         return isinstance(other, Index) and self.index == other.index
@@ -494,6 +546,11 @@ class Slice(JSONPath):
             return [DatumInContext(datum.value[i], path=Index(i), context=datum) for i in xrange(0, len(datum.value))]
         else:
             return [DatumInContext(datum.value[i], path=Index(i), context=datum) for i in range(0, len(datum.value))[self.start:self.end:self.step]]
+
+    def update(self, data, val):
+        for datum in self.find(data):
+            datum.path.update(data, val)
+        return data
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:
