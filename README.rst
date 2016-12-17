@@ -177,6 +177,19 @@ The original proposal, as far as I know:
 -  `JSONPath - XPath for
    JSON <http://goessner.net/articles/JSONPath/>`__ by Stefan Goessner.
 
+Other examples
+--------------
+
+Loading json data from file
+
+.. code:: python
+
+    import json
+    d = json.loads('{"foo": [{"baz": 1}, {"baz": 2}]}')
+    # or
+    with open('myfile.json') as f:
+        d = json.load(f)
+
 Special note about PLY and docstrings
 -------------------------------------
 
