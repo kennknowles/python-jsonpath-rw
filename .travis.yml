@@ -6,7 +6,7 @@ python:
  - "3.3"
  - "3.4"
 install: 
- - "pip install . --use-mirrors"
+ - "pip install ."
  - "pip install pytest --use-mirrors"
  - "pip install coverage coveralls"
 script: coverage run setup.py test
