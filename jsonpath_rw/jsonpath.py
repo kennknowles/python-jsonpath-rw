@@ -46,6 +46,9 @@ class JSONPath(object):
         else:
             return Child(self, child)
 
+    def delete(self, data):
+        raise NotImplementedError()
+
     def make_datum(self, value):
         if isinstance(value, DatumInContext):
             return value
@@ -462,6 +465,12 @@ class Fields(JSONPath):
                 data[field] = val
         return data
 
+    def delete(self, data):
+        for field in self.reified_fields(DatumInContext.wrap(data)):
+            if field in data:
+                del data[field]
+        return data
+
     def __str__(self):
         return ','.join(map(str, self.fields))
 
@@ -495,6 +504,11 @@ class Index(JSONPath):
     def update(self, data, val):
         if len(data) > self.index:
             data[self.index] = val
+        return data
+
+    def delete(self, data):
+        if data is not None and len(data) > self.index:
+            del data[self.index]
         return data
 
     def __eq__(self, other):

@@ -81,7 +81,8 @@ class TestJsonPath(unittest.TestCase):
     
     @classmethod
     def setup_class(cls):
-        logging.basicConfig()
+        logging.basicConfig(format = '%(levelname)s:%(funcName)s:%(message)s',
+                            level = logging.DEBUG)
 
     #
     # Check that the data value returned is good
@@ -91,7 +92,7 @@ class TestJsonPath(unittest.TestCase):
         # Also, we coerce iterables, etc, into the desired target type
 
         for string, data, target in test_cases:
-            print('parse("%s").find(%s) =?= %s' % (string, data, target))
+            logging.debug('parse("%s").find(%s) =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
                 assert [r.value for r in result] == target
@@ -102,10 +103,12 @@ class TestJsonPath(unittest.TestCase):
 
     def test_fields_value(self):
         jsonpath.auto_id_field = None
-        self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
-                           ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
-                           ('@foo', {'@foo': 1}, [1]),
-                           ('*', {'foo': 1, 'baz': 2}, set([1, 2])) ])
+        self.check_cases([
+            ('foo', {'foo': 'baz'}, ['baz']),
+            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
+            ('@foo', {'@foo': 1}, [1]),
+            ('*', {'foo': 1, 'baz': 2}, set([1, 2]))
+        ])
 
         jsonpath.auto_id_field = 'id'
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '`this`'])) ])
@@ -182,7 +185,7 @@ class TestJsonPath(unittest.TestCase):
         # Also, we coerce iterables, etc, into the desired target type
 
         for string, data, target in test_cases:
-            print('parse("%s").find(%s).paths =?= %s' % (string, data, target))
+            logging.debug('parse("%s").find(%s).paths =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
                 assert [str(r.full_path) for r in result] == target
@@ -294,7 +297,7 @@ class TestJsonPath(unittest.TestCase):
 
     def check_update_cases(self, test_cases):
         for original, expr_str, value, expected in test_cases:
-            print('parse(%r).update(%r, %r) =?= %r'
+            logger.debug('parse(%r).update(%r, %r) =?= %r'
                   % (expr_str, original, value, expected))
             expr = parse(expr_str)
             actual = expr.update(original, value)
@@ -352,4 +355,31 @@ class TestJsonPath(unittest.TestCase):
     def test_update_slice(self):
         self.check_update_cases([
             (['foo', 'bar', 'baz'], '[0:2]', 'test', ['test', 'test', 'baz'])
+        ])
+
+    def check_delete_cases(self, test_cases):
+        for string, original, expected in test_cases:
+            logging.debug('parse("%s").delete(%s) =?= %s' % (string, original, expected))
+            actual = parse(string).delete(original)
+            assert actual == expected
+
+    def test_delete_fields(self):
+        jsonpath.auto_id_field = None
+        self.check_delete_cases([
+            ('foo', {'foo': 'baz'}, {}),
+            ('foo', {'foo': 1, 'baz': 2}, {'baz': 2}),
+            ('foo,baz', {'foo': 1, 'baz': 2}, {}),
+            ('@foo', {'@foo': 1}, {}),
+            ('@foo', {'@foo': 1, 'baz': 2}, {'baz': 2}),
+            ('*', {'foo': 1, 'baz': 2}, {})
+        ])
+
+    def test_delete_index(self):
+        self.check_delete_cases([
+            ('[0]', [42], []),
+            ('[5]', [42], [42]),
+            ('[2]', [34, 65, 29, 59], [34, 65, 59]),
+            ('[0]', None, None),
+            ('[0]', [], []),
+            ('[0]', ['foo', 'bar', 'baz'], ['bar', 'baz']),
         ])
