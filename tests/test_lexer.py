@@ -23,13 +23,14 @@ class TestLexer(unittest.TestCase):
         stream2 = list(stream2)
         assert len(stream1) == len(stream2)
         for token1, token2 in zip(stream1, stream2):
-            print(token1, token2)
+            logging.debug(token1, token2)
             assert token1.type  == token2.type
             assert token1.value == token2.value
 
     @classmethod
     def setup_class(cls):
-        logging.basicConfig()
+        logging.basicConfig(format = '%(levelname)s:%(funcName)s:%(message)s',
+                            level = logging.DEBUG)
 
     def test_simple_inputs(self):
         self.assert_lex_equiv('$', [self.token('$', '$')])
@@ -51,6 +52,9 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('&', [self.token('&', '&')])
         self.assert_lex_equiv('@', [self.token('@', 'ID')])
         self.assert_lex_equiv('`this`', [self.token('this', 'NAMED_OPERATOR')])
+        self.assert_lex_equiv('fuzz.`this`', [self.token('fuzz', 'ID'),
+                                              self.token('.', '.'),
+                                              self.token('this', 'NAMED_OPERATOR')])
         self.assert_lex_equiv('|', [self.token('|', '|')])
         self.assert_lex_equiv('where', [self.token('where', 'WHERE')])
 

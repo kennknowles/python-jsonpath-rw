@@ -310,7 +310,10 @@ class TestJsonPath(unittest.TestCase):
 
     def test_update_this(self):
         self.check_update_cases([
-            ('foo', '`this`', 'bar', 'bar')
+            ('foo', '`this`', 'bar', 'bar'),
+            # TODO: fixme
+            # ({'foo': 'bar'}, 'foo.`this`', 'baz', {'foo': 'baz'}),
+            ({'foo': {'bar': 'baz'}}, 'foo.`this`.bar', 'foo', {'foo': {'bar': 'foo'}})
         ])
 
     def test_update_fields(self):
@@ -358,7 +361,7 @@ class TestJsonPath(unittest.TestCase):
         ])
 
     def check_delete_cases(self, test_cases):
-        for string, original, expected in test_cases:
+        for original, string, expected in test_cases:
             logging.debug('parse("%s").delete(%s) =?= %s' % (string, original, expected))
             actual = parse(string).delete(original)
             assert actual == expected
@@ -366,20 +369,78 @@ class TestJsonPath(unittest.TestCase):
     def test_delete_fields(self):
         jsonpath.auto_id_field = None
         self.check_delete_cases([
-            ('foo', {'foo': 'baz'}, {}),
-            ('foo', {'foo': 1, 'baz': 2}, {'baz': 2}),
-            ('foo,baz', {'foo': 1, 'baz': 2}, {}),
-            ('@foo', {'@foo': 1}, {}),
-            ('@foo', {'@foo': 1, 'baz': 2}, {'baz': 2}),
-            ('*', {'foo': 1, 'baz': 2}, {})
+            ({'foo': 'baz'}, 'foo', {}),
+            ({'foo': 1, 'baz': 2}, 'foo', {'baz': 2}),
+            ({'foo': 1, 'baz': 2}, 'foo,baz', {}),
+            ({'@foo': 1}, '@foo', {}),
+            ({'@foo': 1, 'baz': 2}, '@foo', {'baz': 2}),
+            ({'foo': 1, 'baz': 2}, '*', {})
+        ])
+
+    def test_delete_root(self):
+        self.check_delete_cases([
+            ('foo', '$', None),
+        ])
+
+    def test_delete_this(self):
+        self.check_delete_cases([
+            ('foo', '`this`', None),
+            ({}, '`this`', None),
+            ({'foo': 1}, '`this`', None),
+            # TODO: fixme
+            #({'foo': 1}, 'foo.`this`', {}),
+            ({'foo': {'bar': 1}}, 'foo.`this`.bar', {'foo': {}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.`this`.bar', {'foo': {'baz': 2}})
+        ])
+
+    def test_delete_child(self):
+        self.check_delete_cases([
+            ({'foo': 'bar'}, '$.foo', {}),
+            ({'foo': 'bar'}, 'foo', {}),
+            ({'foo': {'bar': 1}}, 'foo.bar', {'foo': {}}),
+            ({'foo': {'bar': 1}}, 'foo.$.foo.bar', {'foo': {}})
+        ])
+
+    def test_delete_where(self):
+        self.check_delete_cases([
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where none', {'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}}),
+
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where baz', {'foo': {}, 'bar': {'baz': 2}})
+        ])
+
+    def test_delete_descendants(self):
+        self.check_delete_cases([
+            ({'somefield': 1}, '$..somefield', {}),
+            ({'outer': {'nestedfield': 1}}, '$..nestedfield', {'outer': {}}),
+            ({'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}},
+             '$..bar',
+             {'outs': {'ins': {}}, 'outs2': {}})
+        ])
+
+    def test_delete_descendants_where(self):
+        self.check_delete_cases([
+            ({'foo': {'bar': 1, 'flag': 1}, 'baz': {'bar': 2}},
+             '(* where flag) .. bar',
+             {'foo': {'flag': 1}, 'baz': {'bar': 2}})
         ])
 
     def test_delete_index(self):
         self.check_delete_cases([
-            ('[0]', [42], []),
-            ('[5]', [42], [42]),
-            ('[2]', [34, 65, 29, 59], [34, 65, 59]),
-            ('[0]', None, None),
-            ('[0]', [], []),
-            ('[0]', ['foo', 'bar', 'baz'], ['bar', 'baz']),
+            ([42], '[0]', []),
+            ([42], '[5]', [42]),
+            ([34, 65, 29, 59], '[2]', [34, 65, 59]),
+            (None, '[0]', None),
+            ([], '[0]', []),
+            (['foo', 'bar', 'baz'], '[0]', ['bar', 'baz']),
+        ])
+
+    def test_delete_slice(self):
+        self.check_delete_cases([
+            (['foo', 'bar', 'baz'], '[0:2]', ['baz']),
+            (['foo', 'bar', 'baz'], '[0:1]', ['bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[0:]', []),
+            (['foo', 'bar', 'baz'], '[:2]', ['baz']),
+            (['foo', 'bar', 'baz'], '[:3]', [])
         ])
