@@ -38,6 +38,14 @@ Then:
     >>> [match.value for match in jsonpath_expr.find({'foo': [{'baz': 1}, {'baz': 2}]})]
     [1, 2]
 
+    # Update values
+    >>> jsonpath_expr.update({'foo': [{'baz': 1}, {'baz': 2}]}, 3)
+    {'foo': [{'baz': 3}, {'baz': 3}]}
+
+    # Delete values
+    >>> jsonpath_expr.delete({'foo': [{'baz': 1}, {'baz': 2}]})
+    {'foo': []}
+
     # Matches remember where they came from
     >>> [str(match.full_path) for match in jsonpath_expr.find({'foo': [{'baz': 1}, {'baz': 2}]})]
     ['foo.[0].baz', 'foo.[1].baz']
