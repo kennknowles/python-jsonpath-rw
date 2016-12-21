@@ -370,15 +370,15 @@ class TestJsonPath(unittest.TestCase):
             (['foo', 'bar', 'baz'], '[0:2]', 'test', ['test', 'test', 'baz'])
         ])
 
-    def check_delete_cases(self, test_cases):
+    def check_exclude_cases(self, test_cases):
         for original, string, expected in test_cases:
-            logging.debug('parse("%s").delete(%s) =?= %s' % (string, original, expected))
-            actual = parse(string).delete(original)
+            logging.debug('parse("%s").exclude(%s) =?= %s' % (string, original, expected))
+            actual = parse(string).exclude(original)
             assert actual == expected
 
-    def test_delete_fields(self):
+    def test_exclude_fields(self):
         jsonpath.auto_id_field = None
-        self.check_delete_cases([
+        self.check_exclude_cases([
             ({'foo': 'baz'}, 'foo', {}),
             ({'foo': 1, 'baz': 2}, 'foo', {'baz': 2}),
             ({'foo': 1, 'baz': 2}, 'foo,baz', {}),
@@ -387,13 +387,13 @@ class TestJsonPath(unittest.TestCase):
             ({'foo': 1, 'baz': 2}, '*', {})
         ])
 
-    def test_delete_root(self):
-        self.check_delete_cases([
+    def test_exclude_root(self):
+        self.check_exclude_cases([
             ('foo', '$', None),
         ])
 
-    def test_delete_this(self):
-        self.check_delete_cases([
+    def test_exclude_this(self):
+        self.check_exclude_cases([
             ('foo', '`this`', None),
             ({}, '`this`', None),
             ({'foo': 1}, '`this`', None),
@@ -403,16 +403,16 @@ class TestJsonPath(unittest.TestCase):
             ({'foo': {'bar': 1, 'baz': 2}}, 'foo.`this`.bar', {'foo': {'baz': 2}})
         ])
 
-    def test_delete_child(self):
-        self.check_delete_cases([
+    def test_exclude_child(self):
+        self.check_exclude_cases([
             ({'foo': 'bar'}, '$.foo', {}),
             ({'foo': 'bar'}, 'foo', {}),
             ({'foo': {'bar': 1}}, 'foo.bar', {'foo': {}}),
             ({'foo': {'bar': 1}}, 'foo.$.foo.bar', {'foo': {}})
         ])
 
-    def test_delete_where(self):
-        self.check_delete_cases([
+    def test_exclude_where(self):
+        self.check_exclude_cases([
             ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
              '*.bar where none', {'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}}),
 
@@ -420,8 +420,8 @@ class TestJsonPath(unittest.TestCase):
              '*.bar where baz', {'foo': {}, 'bar': {'baz': 2}})
         ])
 
-    def test_delete_descendants(self):
-        self.check_delete_cases([
+    def test_exclude_descendants(self):
+        self.check_exclude_cases([
             ({'somefield': 1}, '$..somefield', {}),
             ({'outer': {'nestedfield': 1}}, '$..nestedfield', {'outer': {}}),
             ({'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}},
@@ -429,21 +429,21 @@ class TestJsonPath(unittest.TestCase):
              {'outs': {'ins': {}}, 'outs2': {}})
         ])
 
-    def test_delete_descendants_where(self):
-        self.check_delete_cases([
+    def test_exclude_descendants_where(self):
+        self.check_exclude_cases([
             ({'foo': {'bar': 1, 'flag': 1}, 'baz': {'bar': 2}},
              '(* where flag) .. bar',
              {'foo': {'flag': 1}, 'baz': {'bar': 2}})
         ])
 
-    def test_delete_union(self):
-        self.check_delete_cases([
+    def test_exclude_union(self):
+        self.check_exclude_cases([
             ({'foo': 1, 'bar': 2}, 'foo | bar', {}),
             ({'foo': 1, 'bar': 2, 'baz': 3}, 'foo | bar', {'baz': 3}),
         ])
 
-    def test_delete_index(self):
-        self.check_delete_cases([
+    def test_exclude_index(self):
+        self.check_exclude_cases([
             ([42], '[0]', []),
             ([42], '[5]', [42]),
             ([34, 65, 29, 59], '[2]', [34, 65, 59]),
@@ -452,11 +452,18 @@ class TestJsonPath(unittest.TestCase):
             (['foo', 'bar', 'baz'], '[0]', ['bar', 'baz']),
         ])
 
-    def test_delete_slice(self):
-        self.check_delete_cases([
+    def test_exclude_slice(self):
+        self.check_exclude_cases([
             (['foo', 'bar', 'baz'], '[0:2]', ['baz']),
             (['foo', 'bar', 'baz'], '[0:1]', ['bar', 'baz']),
             (['foo', 'bar', 'baz'], '[0:]', []),
             (['foo', 'bar', 'baz'], '[:2]', ['baz']),
             (['foo', 'bar', 'baz'], '[:3]', [])
         ])
+
+    def check_include_cases(self, test_cases):
+        for original, string, expected in test_cases:
+            logging.debug('parse("%s").exclude(%s) =?= %s' % (string, original, expected))
+            actual = parse(string).include(original)
+            assert actual == expected
+

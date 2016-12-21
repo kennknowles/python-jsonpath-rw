@@ -42,8 +42,8 @@ Then:
     >>> jsonpath_expr.update({'foo': [{'baz': 1}, {'baz': 2}]}, 3)
     {'foo': [{'baz': 3}, {'baz': 3}]}
 
-    # Delete values
-    >>> jsonpath_expr.delete({'foo': [{'baz': 1}, {'baz': 2}]})
+    # Exclude values
+    >>> jsonpath_expr.exclude({'foo': [{'baz': 1}, {'baz': 2}]})
     {'foo': []}
 
     # Matches remember where they came from

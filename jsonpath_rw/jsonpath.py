@@ -46,7 +46,18 @@ class JSONPath(object):
         else:
             return Child(self, child)
 
-    def delete(self, data):
+    def exclude(self, data):
+        """
+        Returns `data` without the specified path
+        """
+        raise NotImplementedError()
+
+    def include(self, data):
+        """
+        Returns `data` with the specified path
+        :param data:
+        :return:
+        """
         raise NotImplementedError()
 
     def make_datum(self, value):
@@ -184,8 +195,11 @@ class Root(JSONPath):
     def update(self, data, val):
         return val
 
-    def delete(self, data):
+    def exclude(self, data):
         return None
+
+    def include(self, data):
+        return data
 
     def __str__(self):
         return '$'
@@ -207,8 +221,11 @@ class This(JSONPath):
     def update(self, data, val):
         return val
 
-    def delete(self, data):
+    def exclude(self, data):
         return None
+
+    def include(self, data):
+        return data
 
     def __str__(self):
         return '`this`'
@@ -245,9 +262,9 @@ class Child(JSONPath):
             self.right.update(datum.value, val)
         return data
 
-    def delete(self, data):
+    def exclude(self, data):
         for datum in self.left.find(data):
-            self.right.delete(datum.value)
+            self.right.exclude(datum.value)
         return data
 
     def __eq__(self, other):
@@ -302,9 +319,9 @@ class Where(JSONPath):
             datum.path.update(data, val)
         return data
 
-    def delete(self, data):
+    def exclude(self, data):
         for path in reversed([datum.path for datum in self.find(data)]):
-            path.delete(data)
+            path.exclude(data)
 
         return data
 
@@ -363,7 +380,7 @@ class Descendants(JSONPath):
     def is_singular(self):
         return False
 
-    def _modify(self, data, val = None, delete = False):
+    def _modify(self, data, val = None, exclude = False):
         # Get all left matches into a list
         left_matches = self.left.find(data)
         if not isinstance(left_matches, list):
@@ -374,8 +391,8 @@ class Descendants(JSONPath):
             if not (isinstance(data, list) or isinstance(data, dict)):
                 return
 
-            if delete:
-                self.right.delete(data)
+            if exclude:
+                self.right.exclude(data)
             else:
                 self.right.update(data, val)
 
@@ -394,10 +411,10 @@ class Descendants(JSONPath):
         return data
 
     def update(self, data, val):
-        return self._modify(data, val, delete = False)
+        return self._modify(data, val, exclude = False)
 
-    def delete(self, data):
-        return self._modify(data, None, delete = True)
+    def exclude(self, data):
+        return self._modify(data, None, exclude = True)
 
     def __str__(self):
         return '%s..%s' % (self.left, self.right)
@@ -430,9 +447,9 @@ class Union(JSONPath):
         self.right.update(data, val)
         return data
 
-    def delete(self, data):
-        self.left.delete(data)
-        self.right.delete(data)
+    def exclude(self, data):
+        self.left.exclude(data)
+        self.right.exclude(data)
         return data
 
 class Intersect(JSONPath):
@@ -501,7 +518,7 @@ class Fields(JSONPath):
                 data[field] = val
         return data
 
-    def delete(self, data):
+    def exclude(self, data):
         for field in self.reified_fields(DatumInContext.wrap(data)):
             if field in data:
                 del data[field]
@@ -542,7 +559,7 @@ class Index(JSONPath):
             data[self.index] = val
         return data
 
-    def delete(self, data):
+    def exclude(self, data):
         if data is not None and len(data) > self.index:
             del data[self.index]
         return data
@@ -602,9 +619,9 @@ class Slice(JSONPath):
             datum.path.update(data, val)
         return data
 
-    def delete(self, data):
+    def exclude(self, data):
         for path in reversed([datum.path for datum in self.find(data)]):
-            path.delete(data)
+            path.exclude(data)
 
         return data
 
