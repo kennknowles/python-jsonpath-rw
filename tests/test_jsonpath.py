@@ -463,7 +463,87 @@ class TestJsonPath(unittest.TestCase):
 
     def check_include_cases(self, test_cases):
         for original, string, expected in test_cases:
-            logging.debug('parse("%s").exclude(%s) =?= %s' % (string, original, expected))
+            logging.debug('parse("%s").include(%s) =?= %s' % (string, original, expected))
             actual = parse(string).include(original)
             assert actual == expected
 
+    def test_include_fields(self):
+        self.check_include_cases([
+            ({'foo': 'baz'}, 'foo', {'foo': 'baz'}),
+            ({'foo': 1, 'baz': 2}, 'foo', {'foo': 1}),
+            ({'foo': 1, 'baz': 2}, 'foo,baz', {'foo': 1, 'baz': 2}),
+            ({'@foo': 1}, '@foo', {'@foo': 1}),
+            ({'@foo': 1, 'baz': 2}, '@foo', {'@foo': 1}),
+            ({'foo': 1, 'baz': 2}, '*', {'foo': 1, 'baz': 2}),
+        ])
+
+    def test_include_index(self):
+        self.check_include_cases([
+            ([42], '[0]', [42]),
+            ([42], '[5]', []),
+            ([34, 65, 29, 59], '[2]', [29]),
+            (None, '[0]', None),
+            ([], '[0]', []),
+            (['foo', 'bar', 'baz'], '[0]', ['foo']),
+        ])
+
+    def test_include_slice(self):
+        self.check_include_cases([
+            (['foo', 'bar', 'baz'], '[0:2]', ['foo', 'bar']),
+            (['foo', 'bar', 'baz'], '[0:1]', ['foo']),
+            (['foo', 'bar', 'baz'], '[0:]', ['foo', 'bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[:2]', ['foo', 'bar']),
+            (['foo', 'bar', 'baz'], '[:3]', ['foo', 'bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[0:0]', []),
+        ])
+
+    def test_include_root(self):
+        self.check_include_cases([
+            ('foo', '$', 'foo'),
+            ({}, '$', {}),
+            ({'foo': 1}, '$', {'foo': 1})
+        ])
+
+    def test_include_this(self):
+        self.check_include_cases([
+            ('foo', '`this`', 'foo'),
+            ({}, '`this`', {}),
+            ({'foo': 1}, '`this`', {'foo': 1}),
+            # TODO: fixme
+            #({'foo': 1}, 'foo.`this`', {}),
+            ({'foo': {'bar': 1}}, 'foo.`this`.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.`this`.bar', {'foo': {'bar': 1}})
+        ])
+
+    def test_include_child(self):
+        self.check_include_cases([
+            ({'foo': 'bar'}, '$.foo', {'foo': 'bar'}),
+            ({'foo': 'bar'}, 'foo', {'foo': 'bar'}),
+            ({'foo': {'bar': 1}}, 'foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1}}, 'foo.$.foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.$.foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, '*', {'foo': {'bar': 1, 'baz': 2}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'non', {}),
+        ])
+
+    """
+    def test_include_where(self):
+        self.check_include_cases([
+            #({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+            # '*.bar where none', {}),
+
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where baz', {'foo': {'bar': {'baz': 1}}})
+        ])
+    """
+
+    """
+    def test_include_descendants(self):
+        self.check_include_cases([
+            ({'somefield': 1}, '$..somefield', {'somefield': 1}),
+            ({'outer': {'nestedfield': 1}}, '$..nestedfield', {'outer': {'nestedfield': 1}}),
+            ({'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}},
+             '$..bar',
+             {'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}})
+        ])
+    """

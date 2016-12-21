@@ -267,6 +267,11 @@ class Child(JSONPath):
             self.right.exclude(datum.value)
         return data
 
+    def include(self, data):
+        for datum in self.left.find(data):
+            self.right.include(datum.value)
+        return data
+
     def __eq__(self, other):
         return isinstance(other, Child) and self.left == other.left and self.right == other.right
 
@@ -524,6 +529,23 @@ class Fields(JSONPath):
                 del data[field]
         return data
 
+    def include(self, data):
+        datum = DatumInContext.wrap(data)
+
+        try:
+            all_fields = tuple(datum.value.keys())
+        except AttributeError:
+            all_fields = ()
+
+        path_fields = self.reified_fields(datum)
+        remove_fields = set(all_fields) - set(path_fields)
+
+        for field in remove_fields:
+            if field in data:
+                del data[field]
+
+        return data
+
     def __str__(self):
         return ','.join(map(str, self.fields))
 
@@ -563,6 +585,15 @@ class Index(JSONPath):
         if data is not None and len(data) > self.index:
             del data[self.index]
         return data
+
+    def include(self, data):
+        if data is None:
+            return None
+
+        if len(data) > self.index:
+            return [data[self.index]]
+
+        return []
 
     def __eq__(self, other):
         return isinstance(other, Index) and self.index == other.index
@@ -623,6 +654,18 @@ class Slice(JSONPath):
         for path in reversed([datum.path for datum in self.find(data)]):
             path.exclude(data)
 
+        return data
+
+    def include(self, data):
+
+        if not data:
+            return data
+
+        ret = []
+        for datum in self.find(data):
+            ret.append(datum.value)
+
+        data = ret
         return data
 
     def __str__(self):
