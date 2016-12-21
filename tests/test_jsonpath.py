@@ -162,6 +162,11 @@ class TestJsonPath(unittest.TestCase):
             ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
         ])
 
+    def test_union_value(self):
+        self.check_cases([
+            ('foo | bar', {'foo': 1, 'bar': 2}, [1, 2])
+        ])
+
     def test_parent_value(self):
         self.check_cases([('foo.baz.`parent`', {'foo': {'baz': 3}}, [{'baz': 3}]),
                           ('foo.`parent`.foo.baz.`parent`.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
@@ -328,6 +333,11 @@ class TestJsonPath(unittest.TestCase):
             ({'foo': {'bar': 1}}, 'foo.bar', 'baz', {'foo': {'bar': 'baz'}})
         ])
 
+    def test_update_union(self):
+        self.check_update_cases([
+            ({'foo': 1, 'bar': 2}, 'foo | bar', 3, {'foo': 3, 'bar': 3})
+        ])
+
     def test_update_where(self):
         self.check_update_cases([
             ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
@@ -424,6 +434,12 @@ class TestJsonPath(unittest.TestCase):
             ({'foo': {'bar': 1, 'flag': 1}, 'baz': {'bar': 2}},
              '(* where flag) .. bar',
              {'foo': {'flag': 1}, 'baz': {'bar': 2}})
+        ])
+
+    def test_delete_union(self):
+        self.check_delete_cases([
+            ({'foo': 1, 'bar': 2}, 'foo | bar', {}),
+            ({'foo': 1, 'bar': 2, 'baz': 3}, 'foo | bar', {'baz': 3}),
         ])
 
     def test_delete_index(self):

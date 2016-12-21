@@ -425,6 +425,16 @@ class Union(JSONPath):
     def find(self, data):
         return self.left.find(data) + self.right.find(data)
 
+    def update(self, data, val):
+        self.left.update(data, val)
+        self.right.update(data, val)
+        return data
+
+    def delete(self, data):
+        self.left.delete(data)
+        self.right.delete(data)
+        return data
+
 class Intersect(JSONPath):
     """
     JSONPath for bits that match *both* patterns.
