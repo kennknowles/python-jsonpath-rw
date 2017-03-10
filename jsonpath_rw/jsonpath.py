@@ -525,7 +525,7 @@ class Fields(JSONPath):
 
     def exclude(self, data):
         for field in self.reified_fields(DatumInContext.wrap(data)):
-            if field in data:
+            if data and field in data:
                 del data[field]
         return data
 

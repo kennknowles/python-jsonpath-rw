@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import unittest
+import json
 
 from jsonpath_rw import jsonpath # For setting the global auto_id_field flag
 
@@ -71,8 +72,6 @@ class TestDatumInContext(unittest.TestCase):
     #     assert AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
     #                           id_field='id',
     #                           context=DatumInContext(value={'id': 'bizzle'}, path=This())).pseudopath == Fields('bizzle').child(Fields('foo'))
-                              
-                              
 
 class TestJsonPath(unittest.TestCase):
     """
@@ -524,6 +523,25 @@ class TestJsonPath(unittest.TestCase):
             ({'foo': {'bar': 1, 'baz': 2}}, 'foo.$.foo.bar', {'foo': {'bar': 1}}),
             ({'foo': {'bar': 1, 'baz': 2}}, '*', {'foo': {'bar': 1, 'baz': 2}}),
             ({'foo': {'bar': 1, 'baz': 2}}, 'non', {}),
+        ])
+
+    def test_exclude_not_exists(self):
+        self.check_exclude_cases([
+            (
+                {
+                    'foo': [
+                        {'bar': 'bar'},
+                        {'baz': None}
+                    ]
+                },
+                'foo.[*].baz.not_exist_key',
+                {
+                    'foo': [
+                        {'bar': 'bar'},
+                        {'baz': None}
+                    ]
+                },
+             ),
         ])
 
     """
