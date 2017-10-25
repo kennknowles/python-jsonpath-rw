@@ -340,7 +340,7 @@ class Descendants(JSONPath):
                 for left_match in left_matches
                 for submatch in match_recursively(left_match)]
             
-    def is_singular():
+    def is_singular(self):
         return False
 
     def update(self, data, val):
