@@ -231,7 +231,7 @@ limitations under the License.
    :target: https://travis-ci.org/kennknowles/python-jsonpath-rw
 .. |Test coverage| image:: https://coveralls.io/repos/kennknowles/python-jsonpath-rw/badge.png?branch=master
    :target: https://coveralls.io/r/kennknowles/python-jsonpath-rw
-.. |PyPi version| image:: https://pypip.in/v/jsonpath-rw/badge.png
+.. |PyPi version| image:: https://img.shields.io/pypi/v/jsonpath-rw.svg
    :target: https://pypi.python.org/pypi/jsonpath-rw
-.. |PyPi downloads| image:: https://pypip.in/d/jsonpath-rw/badge.png
+.. |PyPi downloads| image:: https://img.shields.io/pypi/dm/jsonpath-rw.svg
    :target: https://pypi.python.org/pypi/jsonpath-rw
