@@ -8,7 +8,10 @@ python:
 install: 
  - "pip install ."
  - "pip install pytest"
- - "pip install coverage coveralls"
+ - "pip install coveralls"
+ # Coveralls 4.0 doesn't support Python 3.2
+ - if [ "$TRAVIS_PYTHON_VERSION" == "3.2" ]; then pip install coverage==3.7.1; fi
+ - if [ "$TRAVIS_PYTHON_VERSION" != "3.2" ]; then pip install coverage; fi
 script: coverage run setup.py test
 after_success:
  - coveralls
