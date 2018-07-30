@@ -61,7 +61,7 @@ class JsonPathLexer(object):
     t_ignore = ' \t'
 
     def t_ID(self, t):
-        r'[a-zA-Z_@#][a-zA-Z0-9_@\-]*'
+        r'[a-zA-Z_@][a-zA-Z0-9_@\-]*'
         t.type = self.reserved_words.get(t.value, 'ID')
         return t
 
