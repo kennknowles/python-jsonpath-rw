@@ -53,7 +53,6 @@ class TestLexer(unittest.TestCase):
         self.assert_lex_equiv('`this`', [self.token('this', 'NAMED_OPERATOR')])
         self.assert_lex_equiv('|', [self.token('|', '|')])
         self.assert_lex_equiv('where', [self.token('where', 'WHERE')])
-        self.assert_lex_equiv('a.#text', [self.token('a', 'ID'), self.token('.', '.'), self.token('#text', 'ID')])
 
     def test_basic_errors(self):
         def tokenize(s):
@@ -67,4 +66,4 @@ class TestLexer(unittest.TestCase):
         self.assertRaises(JsonPathLexerError, tokenize, '"`')
         self.assertRaises(JsonPathLexerError, tokenize, "'`")
         self.assertRaises(JsonPathLexerError, tokenize, '?')
-        self.assertRaises(JsonPathLexerError, tokenize, '$.foo.bar.%')
+        self.assertRaises(JsonPathLexerError, tokenize, '$.foo.bar.#')
