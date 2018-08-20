@@ -6,7 +6,7 @@ https://github.com/kennknowles/python-jsonpath-rw
 |Build Status| |Test coverage| |PyPi version| |PyPi downloads|
 
 This library provides a robust and significantly extended implementation
-of JSONPath for Python. It is tested with Python 2.6, 2.7, 3.2, 3.3. 
+of JSONPath for Python. It is tested with Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, and 3.6. 
 *(On travis-ci there is a segfault when running the tests with pypy; I don't think the problem lies with this library)*.
 
 This library differs from other JSONPath implementations in that it is a
@@ -51,7 +51,7 @@ Then:
     >>> [match.value for match in parse('a.*.b.`parent`.c').find({'a': {'x': {'b': 1, 'c': 'number one'}, 'y': {'b': 2, 'c': 'number two'}}})]
     ['number two', 'number one']
 
-    # You can also build expressions directly quite easily 
+    # You can also build expressions directly quite easily
     >>> from jsonpath_rw.jsonpath import Fields
     >>> from jsonpath_rw.jsonpath import Slice
 
@@ -205,7 +205,7 @@ This package is authored and maintained by:
 
 -  `Kenn Knowles <https://github.com/kennknowles>`__
    (`@kennknowles <https://twitter.com/KennKnowles>`__)
-   
+
 with the help of patches submitted by `these contributors <https://github.com/kennknowles/python-jsonpath-rw/graphs/contributors>`__.
 
 Copyright and License
