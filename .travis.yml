@@ -5,7 +5,9 @@ python:
  - "3.2"
  - "3.3"
  - "3.4"
-install: 
+ - "3.5"
+ - "3.6"
+install:
  - "pip install ."
  - "pip install pytest"
  - "pip install coveralls"
