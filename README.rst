@@ -1,3 +1,7 @@
+Maintainers needed
+------------------
+NOTE: this repository is not actively maintained and has many changes scattered across forks. Please see `issue #73 <https://github.com/h2non/jsonpath-ng/issues/73>`_.
+
 Python JSONPath RW
 ==================
 
