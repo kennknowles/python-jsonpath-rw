@@ -30,7 +30,14 @@ class JSONPath(object):
         Returns `data` with the specified path replaced by `val`. Only updates
         if the specified path exists.
         """
+        datum = DatumInContext.wrap(data)
+        updated_datum = self._update(datum, val)
+        return updated_datum.value
 
+    def _update(self, datum, val):
+        """
+        Internal manipulation on wrapped DatumInContext. Returns the updated DatumInContext.
+        """
         raise NotImplementedError()
 
     def child(self, child):
@@ -178,8 +185,9 @@ class Root(JSONPath):
             else:
                 return Root().find(data.context)
 
-    def update(self, data, val):
-        return val
+    def _update(self, datum, val):
+        datum.value = val
+        return datum
 
     def __str__(self):
         return '$'
@@ -198,8 +206,9 @@ class This(JSONPath):
     def find(self, datum):
         return [DatumInContext.wrap(datum)]
 
-    def update(self, data, val):
-        return val
+    def _update(self, datum, val):
+        datum.value = val
+        return datum
 
     def __str__(self):
         return '`this`'
@@ -231,10 +240,14 @@ class Child(JSONPath):
                 if not isinstance(subdata, AutoIdForDatum)
                 for submatch in self.right.find(subdata)]
 
-    def update(self, data, val):
-        for datum in self.left.find(data):
-            self.right.update(datum.value, val)
-        return data
+    def _update(self, datum, val):
+        for matched_datum in self.left.find(datum):
+            # As matched_datum splits out the child value, updating matched_datum alone does not affect the value
+            # of the parent datum. To propagate this new child value, we need to use matched_datum.full_path to write
+            # the value to the parent datum.
+            new_child_value = self.right._update(matched_datum, val).value
+            matched_datum.full_path._update(datum, new_child_value)
+        return datum
 
     def __eq__(self, other):
         return isinstance(other, Child) and self.left == other.left and self.right == other.right
@@ -283,10 +296,10 @@ class Where(JSONPath):
     def find(self, data):
         return [subdata for subdata in self.left.find(data) if self.right.find(subdata)]
 
-    def update(self, data, val):
-        for datum in self.find(data):
-            datum.path.update(data, val)
-        return data
+    def _update(self, datum, val):
+        for matched_datum in self.find(datum):
+            matched_datum.path.update(datum, val)
+        return datum
 
     def __str__(self):
         return '%s where %s' % (self.left, self.right)
@@ -343,32 +356,32 @@ class Descendants(JSONPath):
     def is_singular(self):
         return False
 
-    def update(self, data, val):
+    def _update(self, datum, val):
         # Get all left matches into a list
-        left_matches = self.left.find(data)
+        left_matches = self.left.find(datum)
         if not isinstance(left_matches, list):
             left_matches = [left_matches]
 
-        def update_recursively(data):
+        def update_recursively(datum):
             # Update only mutable values corresponding to JSON types
-            if not (isinstance(data, list) or isinstance(data, dict)):
+            if not (isinstance(datum.value, list) or isinstance(datum.value, dict)):
                 return
 
-            self.right.update(data, val)
+            self.right._update(datum, val)
 
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
-            if isinstance(data, list):
-                for i in range(0, len(data)):
-                    update_recursively(data[i])
+            if isinstance(datum.value, list):
+                for i in range(0, len(datum.value)):
+                    update_recursively(DatumInContext(value=datum.value[i], path=Index(i), context=datum))
 
-            elif isinstance(data, dict):
-                for field in data.keys():
-                    update_recursively(data[field])
+            elif isinstance(datum.value, dict):
+                for field in datum.value.keys():
+                    update_recursively(DatumInContext(value=datum.value[field], path=Fields(field), context=datum))
 
         for submatch in left_matches:
-            update_recursively(submatch.value)
+            update_recursively(submatch)
 
-        return data
+        return datum
 
     def __str__(self):
         return '%s..%s' % (self.left, self.right)
@@ -456,11 +469,11 @@ class Fields(JSONPath):
                  for field_datum in [self.get_field_datum(datum, field) for field in self.reified_fields(datum)]
                  if field_datum is not None]
 
-    def update(self, data, val):
-        for field in self.reified_fields(DatumInContext.wrap(data)):
-            if field in data:
-                data[field] = val
-        return data
+    def _update(self, datum, val):
+        for field in self.reified_fields(datum):
+            if field in datum.value:
+                datum.value[field] = val
+        return datum
 
     def __str__(self):
         return ','.join(map(str, self.fields))
@@ -492,15 +505,18 @@ class Index(JSONPath):
         else:
             return []
 
-    def update(self, data, val):
-        if len(data) > self.index:
-            data[self.index] = val
-        return data
+    def _update(self, datum, val):
+        if len(datum.value) > self.index:
+            datum.value[self.index] = val
+        return datum
 
     def __eq__(self, other):
         return isinstance(other, Index) and self.index == other.index
 
     def __str__(self):
+        return '[%i]' % self.index
+
+    def __repr__(self):
         return '[%i]' % self.index
 
 class Slice(JSONPath):
@@ -547,10 +563,10 @@ class Slice(JSONPath):
         else:
             return [DatumInContext(datum.value[i], path=Index(i), context=datum) for i in range(0, len(datum.value))[self.start:self.end:self.step]]
 
-    def update(self, data, val):
-        for datum in self.find(data):
-            datum.path.update(data, val)
-        return data
+    def _update(self, datum, val):
+        for matched_datum in self.find(datum):
+            matched_datum.path._update(datum, val)
+        return datum
 
     def __str__(self):
         if self.start == None and self.end == None and self.step == None:

@@ -307,7 +307,9 @@ class TestJsonPath(unittest.TestCase):
 
     def test_update_this(self):
         self.check_update_cases([
-            ('foo', '`this`', 'bar', 'bar')
+            ('foo', '`this`', 'bar', 'bar'),
+            ('foo', '$.`this`', 'bar', 'bar'),
+            ({'a': 'foo'}, '$.a.`this`', 'bar', {'a': 'bar'})
         ])
 
     def test_update_fields(self):
