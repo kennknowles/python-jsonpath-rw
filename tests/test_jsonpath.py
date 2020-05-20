@@ -170,6 +170,14 @@ class TestJsonPath(unittest.TestCase):
         self.assertRaises(JsonPathLexerError, self.check_cases,
                 [('foo.-baz', {'foo': {'-baz': 8}}, [8])])
 
+    def test_json_value(self):
+        self.check_cases([
+            ('`json`', '{"foo": "bar"}', [{"foo": "bar"}]),
+            ('a.`json`', {"a": '{"foo": "bar"}'}, [{"foo": "bar"}]),
+            ('a.`json`', {"a": 'false'}, [False]),
+            ('a.`json`', {"a": "INVALID JSON"}, [None]),
+            ('a.`json`.foo', {"a": '{"foo": "bar"}'}, ["bar"]),
+        ])
 
 
 
@@ -354,4 +362,14 @@ class TestJsonPath(unittest.TestCase):
     def test_update_slice(self):
         self.check_update_cases([
             (['foo', 'bar', 'baz'], '[0:2]', 'test', ['test', 'test', 'baz'])
+        ])
+
+    def test_update_json(self):
+        self.check_update_cases([
+            ('{"foo": "bar"}', '`json`', {"a": "b"}, '{"a": "b"}'),
+            ({"a": '{"foo": "bar"}'}, 'a.`json`', 5, {"a": '5'}),
+            ({"a": "INVALID JSON"}, 'a.`json`', False, {"a": 'false'}),
+            ({"a": '{"foo": "bar"}'}, 'a.`json`.foo', 555, {"a": '{"foo": 555}'}),
+            ({"a": '{"foo": {"bar": "baz"}}'}, 'a.`json`.foo.bar', 555, {"a": '{"foo": {"bar": 555}}'}),
+            ({"a": '{"foo": "{\\"bar\\": \\"baz\\"}"}'}, 'a.`json`.foo.`json`.bar', 666, {"a": '{"foo": "{\\"bar\\": 666}"}'}),
         ])

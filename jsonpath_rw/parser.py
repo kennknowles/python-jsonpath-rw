@@ -97,6 +97,8 @@ class JsonPathParser(object):
             p[0] = This()
         elif p[1] == 'parent':
             p[0] = Parent()
+        elif p[1] == 'json':
+            p[0] = Json()
         else:
             raise Exception('Unknown named operator `%s` at %s:%s' % (p[1], p.lineno(1), p.lexpos(1)))
 

@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
+import json
 import logging
 import six
 from six.moves import xrange
@@ -581,3 +582,31 @@ class Slice(JSONPath):
 
     def __eq__(self, other):
         return isinstance(other, Slice) and other.start == self.start and self.end == other.end and other.step == self.step
+
+
+class Json(JSONPath):
+    """
+    The JSONPath referring to the json data of current datum. Concrete syntax is '`json`'.
+    """
+
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        try:
+            loaded_value = json.loads(datum.value)
+        except Exception:
+            loaded_value = None
+
+        return [DatumInContext(value=loaded_value, path=Json(), context=datum)]
+
+    def _update(self, datum, val):
+        datum.value = json.dumps(val)
+        return datum
+
+    def __str__(self):
+        return '`json`'
+
+    def __repr__(self):
+        return 'Json()'
+
+    def __eq__(self, other):
+        return isinstance(other, Json)
