@@ -17,7 +17,7 @@ class JsonPathParser(object):
     '''
     An LALR-parser for JsonPath
     '''
-    
+
     tokens = JsonPathLexer.tokens
 
     def __init__(self, debug=False, lexer_class=None):
@@ -40,7 +40,7 @@ class JsonPathParser(object):
             module_name = os.path.splitext(os.path.split(__file__)[1])[0]
         except:
             module_name = __name__
-        
+
         parsing_table_module = '_'.join([module_name, start_symbol, 'parsetab'])
 
         # And we regenerate the parse table every time; it doesn't actually take that long!
@@ -55,7 +55,7 @@ class JsonPathParser(object):
         return new_parser.parse(lexer = IteratorToTokenStream(token_iterator))
 
     # ===================== PLY Parser specification =====================
-    
+
     precedence = [
         ('left', ','),
         ('left', 'DOUBLEDOT'),
@@ -66,10 +66,10 @@ class JsonPathParser(object):
     ]
 
     def p_error(self, t):
-        raise Exception('Parse error at %s:%s near token %s (%s)' % (t.lineno, t.col, t.value, t.type)) 
+        raise Exception('Parse error at %s:%s near token %s (%s)' % (t.lineno, t.col, t.value, t.type))
 
     def p_jsonpath_binop(self, p):
-        """jsonpath : jsonpath '.' jsonpath 
+        """jsonpath : jsonpath '.' jsonpath
                     | jsonpath DOUBLEDOT jsonpath
                     | jsonpath WHERE jsonpath
                     | jsonpath '|' jsonpath
@@ -134,7 +134,7 @@ class JsonPathParser(object):
 
     # Because fields in brackets cannot be '*' - that is reserved for array indices
     def p_fields_or_any(self, p):
-        """fields_or_any : fields 
+        """fields_or_any : fields
                          | '*'    """
         if p[1] == '*':
             p[0] = ['*']
@@ -165,7 +165,7 @@ class JsonPathParser(object):
         """maybe_int : NUMBER
                      | empty"""
         p[0] = p[1]
-    
+
     def p_empty(self, p):
         'empty :'
         p[0] = None

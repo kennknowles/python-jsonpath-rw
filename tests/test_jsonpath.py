@@ -11,7 +11,7 @@ class TestDatumInContext(unittest.TestCase):
     """
     Tests of properties of the DatumInContext and AutoIdForDatum objects
     """
-    
+
     @classmethod
     def setup_class(cls):
         logging.basicConfig()
@@ -21,7 +21,7 @@ class TestDatumInContext(unittest.TestCase):
         test_datum1 = DatumInContext(3)
         assert test_datum1.path == This()
         assert test_datum1.full_path == This()
-        
+
         test_datum2 = DatumInContext(3, path=Root())
         assert test_datum2.path == Root()
         assert test_datum2.full_path == Root()
@@ -53,7 +53,7 @@ class TestDatumInContext(unittest.TestCase):
     #                           context=DatumInContext(value=3, path=This())).pseudopath == Fields('bizzle')
 
     #     assert (AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
-    #                            id_field='id').in_context(DatumInContext(value={'id': 'bizzle'}, path=This())) 
+    #                            id_field='id').in_context(DatumInContext(value={'id': 'bizzle'}, path=This()))
     #             ==
     #             AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
     #                            id_field='id',
@@ -61,7 +61,7 @@ class TestDatumInContext(unittest.TestCase):
 
     #     assert (AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
     #                            id_field='id',
-    #                            context=DatumInContext(value={"id": 'bizzle'}, 
+    #                            context=DatumInContext(value={"id": 'bizzle'},
     #                                                path=Fields('maggle'))).in_context(DatumInContext(value='whatever', path=Fields('miggle')))
     #             ==
     #             AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
@@ -71,14 +71,14 @@ class TestDatumInContext(unittest.TestCase):
     #     assert AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
     #                           id_field='id',
     #                           context=DatumInContext(value={'id': 'bizzle'}, path=This())).pseudopath == Fields('bizzle').child(Fields('foo'))
-                              
-                              
+
+
 
 class TestJsonPath(unittest.TestCase):
     """
     Tests of the actual jsonpath functionality
     """
-    
+
     @classmethod
     def setup_class(cls):
         logging.basicConfig()
@@ -112,7 +112,7 @@ class TestJsonPath(unittest.TestCase):
 
     def test_root_value(self):
         jsonpath.auto_id_field = None
-        self.check_cases([ 
+        self.check_cases([
             ('$', {'foo': 'baz'}, [{'foo':'baz'}]),
             ('foo.$', {'foo': 'baz'}, [{'foo':'baz'}]),
             ('foo.$.foo', {'foo': 'baz'}, ['baz']),
@@ -120,7 +120,7 @@ class TestJsonPath(unittest.TestCase):
 
     def test_this_value(self):
         jsonpath.auto_id_field = None
-        self.check_cases([ 
+        self.check_cases([
             ('`this`', {'foo': 'baz'}, [{'foo':'baz'}]),
             ('foo.`this`', {'foo': 'baz'}, ['baz']),
             ('foo.`this`.baz', {'foo': {'baz': 3}}, [3]),
@@ -154,9 +154,9 @@ class TestJsonPath(unittest.TestCase):
                           ('foo.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
 
     def test_descendants_value(self):
-        self.check_cases([ 
+        self.check_cases([
             ('foo..baz', {'foo': {'baz': 1, 'bing': {'baz': 2}}}, [1, 2] ),
-            ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
+            ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ),
         ])
 
     def test_parent_value(self):
@@ -202,7 +202,7 @@ class TestJsonPath(unittest.TestCase):
 
     def test_root_paths(self):
         jsonpath.auto_id_field = None
-        self.check_paths([ 
+        self.check_paths([
             ('$', {'foo': 'baz'}, ['$']),
             ('foo.$', {'foo': 'baz'}, ['$']),
             ('foo.$.foo', {'foo': 'baz'}, ['foo']),
@@ -210,7 +210,7 @@ class TestJsonPath(unittest.TestCase):
 
     def test_this_paths(self):
         jsonpath.auto_id_field = None
-        self.check_paths([ 
+        self.check_paths([
             ('`this`', {'foo': 'baz'}, ['`this`']),
             ('foo.`this`', {'foo': 'baz'}, ['foo']),
             ('foo.`this`.baz', {'foo': {'baz': 3}}, ['foo.baz']),
@@ -241,22 +241,22 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([ ('foo.id', {'foo': 'baz'}, ['foo']),
                            ('foo.id', {'foo': {'id': 'baz'}}, ['baz']),
                            ('foo,baz.id', {'foo': 1, 'baz': 2}, ['foo', 'baz']),
-                           ('*.id', 
+                           ('*.id',
                             {'foo':{'id': 1},
                              'baz': 2},
                              set(['1', 'baz'])) ])
 
     def test_root_auto_id(self):
         jsonpath.auto_id_field = 'id'
-        self.check_cases([ 
+        self.check_cases([
             ('$.id', {'foo': 'baz'}, ['$']), # This is a wonky case that is not that interesting
-            ('foo.$.id', {'foo': 'baz', 'id': 'bizzle'}, ['bizzle']), 
+            ('foo.$.id', {'foo': 'baz', 'id': 'bizzle'}, ['bizzle']),
             ('foo.$.baz.id', {'foo': 4, 'baz': 3}, ['baz']),
         ])
 
     def test_this_auto_id(self):
         jsonpath.auto_id_field = 'id'
-        self.check_cases([ 
+        self.check_cases([
             ('id', {'foo': 'baz'}, ['`this`']), # This is, again, a wonky case that is not that interesting
             ('foo.`this`.id', {'foo': 'baz'}, ['foo']),
             ('foo.`this`.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
@@ -282,14 +282,14 @@ class TestJsonPath(unittest.TestCase):
 
     def test_descendants_auto_id(self):
         jsonpath.auto_id_field = "id"
-        self.check_cases([('foo..baz.id', 
+        self.check_cases([('foo..baz.id',
                            {'foo': {
-                               'baz': 1, 
+                               'baz': 1,
                                'bing': {
                                    'baz': 2
                                 }
                              } },
-                             ['foo.baz', 
+                             ['foo.baz',
                               'foo.bing.baz'] )])
 
     def check_update_cases(self, test_cases):

@@ -13,7 +13,7 @@ auto_id_field = None
 class JSONPath(object):
     """
     The base class for JSONPath abstract syntax; those
-    methods stubbed here are the interface to supported 
+    methods stubbed here are the interface to supported
     JSONPath semantics.
     """
 
@@ -56,8 +56,8 @@ class DatumInContext(object):
     """
     Represents a datum along a path from a context.
 
-    Essentially a zipper but with a structure represented by JsonPath, 
-    and where the context is more of a parent pointer than a proper 
+    Essentially a zipper but with a structure represented by JsonPath,
+    and where the context is more of a parent pointer than a proper
     representation of the context.
 
     For quick-and-dirty work, this proxies any non-special attributes
@@ -118,7 +118,7 @@ class AutoIdForDatum(DatumInContext):
     """
     This behaves like a DatumInContext, but the value is
     always the path leading up to it, not including the "id",
-    and with any "id" fields along the way replacing the prior 
+    and with any "id" fields along the way replacing the prior
     segment of the path
 
     For example, it will make "foo.bar.id" return a datum
@@ -126,9 +126,9 @@ class AutoIdForDatum(DatumInContext):
 
     This is disabled by default; it can be turned on by
     settings the `auto_id_field` global to a value other
-    than `None`. 
+    than `None`.
     """
-    
+
     def __init__(self, datum, id_field=None):
         """
         Invariant is that datum.path is the path from context to datum. The auto id
@@ -215,7 +215,7 @@ class Child(JSONPath):
     JSONPath that first matches the left, then the right.
     Concrete syntax is <left> '.' <right>
     """
-    
+
     def __init__(self, left, right):
         self.left = left
         self.right = right
@@ -225,7 +225,7 @@ class Child(JSONPath):
         Extra special case: auto ids do not have children,
         so cut it off right now rather than auto id the auto id
         """
-        
+
         return [submatch
                 for subdata in self.left.find(datum)
                 if not isinstance(subdata, AutoIdForDatum)
@@ -264,7 +264,7 @@ class Parent(JSONPath):
 
     def __repr__(self):
         return 'Parent()'
-        
+
 
 class Where(JSONPath):
     """
@@ -275,7 +275,7 @@ class Where(JSONPath):
     WARNING: Subject to change. May want to have "contains"
     or some other better word for it.
     """
-    
+
     def __init__(self, left, right):
         self.left = left
         self.right = right
@@ -299,7 +299,7 @@ class Descendants(JSONPath):
     JSONPath that matches first the left expression then any descendant
     of it which matches the right expression.
     """
-    
+
     def __init__(self, left, right):
         self.left = left
         self.right = right
@@ -308,7 +308,7 @@ class Descendants(JSONPath):
         # <left> .. <right> ==> <left> . (<right> | *..<right> | [*]..<right>)
         #
         # With with a wonky caveat that since Slice() has funky coercions
-        # we cannot just delegate to that equivalence or we'll hit an 
+        # we cannot just delegate to that equivalence or we'll hit an
         # infinite loop. So right here we implement the coercion-free version.
 
         # Get all left matches into a list
@@ -334,12 +334,12 @@ class Descendants(JSONPath):
                 recursive_matches = []
 
             return right_matches + list(recursive_matches)
-                
+
         # TODO: repeatable iterator instead of list?
         return [submatch
                 for left_match in left_matches
                 for submatch in match_recursively(left_match)]
-            
+
     def is_singular(self):
         return False
 
@@ -425,7 +425,7 @@ class Fields(JSONPath):
     WARNING: If '*' is any of the field names, then they will
     all be returned.
     """
-    
+
     def __init__(self, *fields):
         self.fields = fields
 
@@ -451,7 +451,7 @@ class Fields(JSONPath):
 
     def find(self, datum):
         datum  = DatumInContext.wrap(datum)
-        
+
         return  [field_datum
                  for field_datum in [self.get_field_datum(datum, field) for field in self.reified_fields(datum)]
                  if field_datum is not None]
@@ -475,7 +475,7 @@ class Fields(JSONPath):
 class Index(JSONPath):
     """
     JSONPath that matches indices of the current datum, or none if not large enough.
-    Concrete syntax is brackets. 
+    Concrete syntax is brackets.
 
     WARNING: If the datum is None or not long enough, it will not crash but will not match anything.
     NOTE: For the concrete syntax of `[*]`, the abstract syntax is a Slice() with no parameters (equiv to `[:]`
@@ -486,7 +486,7 @@ class Index(JSONPath):
 
     def find(self, datum):
         datum = DatumInContext.wrap(datum)
-        
+
         if datum.value and len(datum.value) > self.index:
             return [DatumInContext(datum.value[self.index], path=self, context=datum)]
         else:
@@ -505,7 +505,7 @@ class Index(JSONPath):
 
 class Slice(JSONPath):
     """
-    JSONPath matching a slice of an array. 
+    JSONPath matching a slice of an array.
 
     Because of a mismatch between JSON and XML when schema-unaware,
     this always returns an iterable; if the incoming data
@@ -513,7 +513,7 @@ class Slice(JSONPath):
     data.
 
     Consider these two docs, and their schema-unaware translation to JSON:
-    
+
     <a><b>hello</b></a> ==> {"a": {"b": "hello"}}
     <a><b>hello</b><b>goodbye</b></a> ==> {"a": {"b": ["hello", "goodbye"]}}
 
@@ -531,10 +531,10 @@ class Slice(JSONPath):
         self.start = start
         self.end = end
         self.step = step
-    
+
     def find(self, datum):
         datum = DatumInContext.wrap(datum)
-        
+
         # Here's the hack. If it is a dictionary or some kind of constant,
         # put it in a single-element list
         if (isinstance(datum.value, dict) or isinstance(datum.value, six.integer_types) or isinstance(datum.value, six.string_types)):
@@ -556,7 +556,7 @@ class Slice(JSONPath):
         if self.start == None and self.end == None and self.step == None:
             return '[*]'
         else:
-            return '[%s%s%s]' % (self.start or '', 
+            return '[%s%s%s]' % (self.start or '',
                                    ':%d'%self.end if self.end else '',
                                    ':%d'%self.step if self.step else '')
 
