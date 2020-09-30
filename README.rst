@@ -1,4 +1,4 @@
-Python JSONPath RW
+Python JSONPath RW  - An Amazing Project
 ==================
 
 https://github.com/kennknowles/python-jsonpath-rw
