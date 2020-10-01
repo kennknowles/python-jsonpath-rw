@@ -1,4 +1,4 @@
-Python JSONPath RW
+Python JSONPath RW ---- An Amazing Python Module
 ==================
 
 https://github.com/kennknowles/python-jsonpath-rw
@@ -16,7 +16,7 @@ extend. (You can also execute them :-)
 Quick Start
 -----------
 
-To install, use pip:
+To install the module, use pip:
 
 ::
 
