@@ -1,5 +1,5 @@
-Python JSONPath RW
-==================
+Python JSON Path RW
+===================
 
 https://github.com/kennknowles/python-jsonpath-rw
 
@@ -8,16 +8,15 @@ https://github.com/kennknowles/python-jsonpath-rw
 This library provides a robust and significantly extended implementation
 of JSONPath for Python. It is tested with Python 2.7, 3.4, 3.5, 3.6, 3.7, pypy and pypy3. 
 
-This library differs from other JSONPath implementations in that it is a
+This library differs from other JSON Path implementations in that it is a
 full *language* implementation, meaning the JSONPath expressions are
 first class objects, easy to analyze, transform, parse, print, and
 extend. (You can also execute them :-)
 
-Quick Start
+Quick Start:
 -----------
 
 To install, use pip:
-
 ::
 
     $ pip install jsonpath-rw
