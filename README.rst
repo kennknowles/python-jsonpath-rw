@@ -54,7 +54,7 @@ Then:
     >>> from jsonpath_rw.jsonpath import Fields
     >>> from jsonpath_rw.jsonpath import Slice
 
-    >>> jsonpath_expr_direct = Fields('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
+    >>> jsonpath_expr_direct = Fields.('foo').child(Slice('*')).child(Fields('baz'))  # This is equivalent
 
 JSONPath Syntax
 ---------------
