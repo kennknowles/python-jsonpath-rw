@@ -13,7 +13,7 @@ full *language* implementation, meaning the JSONPath expressions are
 first class objects, easy to analyze, transform, parse, print, and
 extend. (You can also execute them :-)
 
-Quick Start
+Quick Start with amazing project
 -----------
 
 To install, use pip:
