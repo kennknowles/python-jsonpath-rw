@@ -1,6 +1,5 @@
 Python JSONPath RW
 ==================
-
 https://github.com/kennknowles/python-jsonpath-rw
 
 |Build Status| |Test coverage| |PyPi version| |PyPi downloads|
