@@ -267,6 +267,19 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([('[0].id', [42], ['[0]']),
                           ('[2].id', [34, 65, 29, 59], ['[2]'])])
 
+    def test_nested_index_auto_id(self):
+        jsonpath.auto_id_field = "id"
+        data = {
+            "id": 1,
+            "b": {'id': 'bid', 'name': 'bob'},
+            "m": [
+                {'a': 'a1'}, {'a': 'a2', 'id': 'a2id'}
+            ]
+        }
+        self.check_cases([('m.[1].id', data, ['1.m.a2id']),
+                          ('m.[1].$.b.id', data, ['1.bid']),
+                          ('m.[0].id', data, ['1.m.[0]'])])
+
     def test_slice_auto_id(self):
         jsonpath.auto_id_field = "id"
         self.check_cases([ ('[*].id', [1, 2, 3], ['[0]', '[1]', '[2]']),
