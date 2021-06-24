@@ -244,7 +244,7 @@ class TestJsonPath(unittest.TestCase):
                            ('*.id', 
                             {'foo':{'id': 1},
                              'baz': 2},
-                             set(['1', 'baz'])) ])
+                             set([1, 'baz'])) ])
 
     def test_root_auto_id(self):
         jsonpath.auto_id_field = 'id'
@@ -276,8 +276,8 @@ class TestJsonPath(unittest.TestCase):
                 {'a': 'a1'}, {'a': 'a2', 'id': 'a2id'}
             ]
         }
-        self.check_cases([('m.[1].id', data, ['1.m.a2id']),
-                          ('m.[1].$.b.id', data, ['1.bid']),
+        self.check_cases([('m.[1].id', data, ['a2id']),
+                          ('m.[1].$.b.id', data, ['bid']),
                           ('m.[0].id', data, ['1.m.[0]'])])
 
     def test_slice_auto_id(self):
@@ -290,7 +290,7 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([('foo.baz.id', {'foo': {'baz': 3}}, ['foo.baz']),
                           ('foo.baz.id', {'foo': {'baz': [3]}}, ['foo.baz']),
                           ('foo.baz.id', {'foo': {'id': 'bizzle', 'baz': 3}}, ['bizzle.baz']),
-                          ('foo.baz.id', {'foo': {'baz': {'id': 'hi'}}}, ['foo.hi']),
+                          ('foo.baz.id', {'foo': {'baz': {'id': 'hi'}}}, ['hi']),
                           ('foo.baz.bizzle.id', {'foo': {'baz': {'bizzle': 5}}}, ['foo.baz.bizzle'])])
 
     def test_descendants_auto_id(self):

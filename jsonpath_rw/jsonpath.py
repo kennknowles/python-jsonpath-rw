@@ -430,14 +430,13 @@ class Fields(JSONPath):
         self.fields = fields
 
     def get_field_datum(self, datum, field):
-        if field == auto_id_field:
-            return AutoIdForDatum(datum)
-        else:
-            try:
-                field_value = datum.value[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
-                return DatumInContext(value=field_value, path=Fields(field), context=datum)
-            except (TypeError, KeyError, AttributeError):
-                return None
+        try:
+            field_value = datum.value[field] # Do NOT use `val.get(field)` since that confuses None as a value and None due to `get`
+            return DatumInContext(value=field_value, path=Fields(field), context=datum)
+        except (TypeError, KeyError, AttributeError):
+            if field == auto_id_field:
+                return AutoIdForDatum(datum)
+            return None
 
     def reified_fields(self, datum):
         if '*' not in self.fields:
