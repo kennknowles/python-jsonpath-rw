@@ -46,6 +46,20 @@ class JSONPath(object):
         else:
             return Child(self, child)
 
+    def exclude(self, data):
+        """
+        Returns `data` without the specified path
+        """
+        raise NotImplementedError()
+
+    def include(self, data):
+        """
+        Returns `data` with the specified path
+        :param data:
+        :return:
+        """
+        raise NotImplementedError()
+
     def make_datum(self, value):
         if isinstance(value, DatumInContext):
             return value
@@ -181,6 +195,12 @@ class Root(JSONPath):
     def update(self, data, val):
         return val
 
+    def exclude(self, data):
+        return None
+
+    def include(self, data):
+        return data
+
     def __str__(self):
         return '$'
 
@@ -200,6 +220,12 @@ class This(JSONPath):
 
     def update(self, data, val):
         return val
+
+    def exclude(self, data):
+        return None
+
+    def include(self, data):
+        return data
 
     def __str__(self):
         return '`this`'
@@ -234,6 +260,16 @@ class Child(JSONPath):
     def update(self, data, val):
         for datum in self.left.find(data):
             self.right.update(datum.value, val)
+        return data
+
+    def exclude(self, data):
+        for datum in self.left.find(data):
+            self.right.exclude(datum.value)
+        return data
+
+    def include(self, data):
+        for datum in self.left.find(data):
+            self.right.include(datum.value)
         return data
 
     def __eq__(self, other):
@@ -286,6 +322,12 @@ class Where(JSONPath):
     def update(self, data, val):
         for datum in self.find(data):
             datum.path.update(data, val)
+        return data
+
+    def exclude(self, data):
+        for path in reversed([datum.path for datum in self.find(data)]):
+            path.exclude(data)
+
         return data
 
     def __str__(self):
@@ -343,32 +385,41 @@ class Descendants(JSONPath):
     def is_singular(self):
         return False
 
-    def update(self, data, val):
+    def _modify(self, data, val = None, exclude = False):
         # Get all left matches into a list
         left_matches = self.left.find(data)
         if not isinstance(left_matches, list):
             left_matches = [left_matches]
 
-        def update_recursively(data):
+        def modify_recursively(data):
             # Update only mutable values corresponding to JSON types
             if not (isinstance(data, list) or isinstance(data, dict)):
                 return
 
-            self.right.update(data, val)
+            if exclude:
+                self.right.exclude(data)
+            else:
+                self.right.update(data, val)
 
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
             if isinstance(data, list):
-                for i in range(0, len(data)):
-                    update_recursively(data[i])
+                for i in reversed(range(0, len(data))):
+                    modify_recursively(data[i])
 
             elif isinstance(data, dict):
                 for field in data.keys():
-                    update_recursively(data[field])
+                    modify_recursively(data[field])
 
         for submatch in left_matches:
-            update_recursively(submatch.value)
+            modify_recursively(submatch.value)
 
         return data
+
+    def update(self, data, val):
+        return self._modify(data, val, exclude = False)
+
+    def exclude(self, data):
+        return self._modify(data, None, exclude = True)
 
     def __str__(self):
         return '%s..%s' % (self.left, self.right)
@@ -395,6 +446,16 @@ class Union(JSONPath):
 
     def find(self, data):
         return self.left.find(data) + self.right.find(data)
+
+    def update(self, data, val):
+        self.left.update(data, val)
+        self.right.update(data, val)
+        return data
+
+    def exclude(self, data):
+        self.left.exclude(data)
+        self.right.exclude(data)
+        return data
 
 class Intersect(JSONPath):
     """
@@ -461,6 +522,29 @@ class Fields(JSONPath):
                 data[field] = val
         return data
 
+    def exclude(self, data):
+        for field in self.reified_fields(DatumInContext.wrap(data)):
+            if data and field in data:
+                del data[field]
+        return data
+
+    def include(self, data):
+        datum = DatumInContext.wrap(data)
+
+        try:
+            all_fields = tuple(datum.value.keys())
+        except AttributeError:
+            all_fields = ()
+
+        path_fields = self.reified_fields(datum)
+        remove_fields = set(all_fields) - set(path_fields)
+
+        for field in remove_fields:
+            if field in data:
+                del data[field]
+
+        return data
+
     def __str__(self):
         return ','.join(map(str, self.fields))
 
@@ -495,6 +579,20 @@ class Index(JSONPath):
         if len(data) > self.index:
             data[self.index] = val
         return data
+
+    def exclude(self, data):
+        if data is not None and len(data) > self.index:
+            del data[self.index]
+        return data
+
+    def include(self, data):
+        if data is None:
+            return None
+
+        if len(data) > self.index:
+            return [data[self.index]]
+
+        return []
 
     def __eq__(self, other):
         return isinstance(other, Index) and self.index == other.index
@@ -549,6 +647,24 @@ class Slice(JSONPath):
     def update(self, data, val):
         for datum in self.find(data):
             datum.path.update(data, val)
+        return data
+
+    def exclude(self, data):
+        for path in reversed([datum.path for datum in self.find(data)]):
+            path.exclude(data)
+
+        return data
+
+    def include(self, data):
+
+        if not data:
+            return data
+
+        ret = []
+        for datum in self.find(data):
+            ret.append(datum.value)
+
+        data = ret
         return data
 
     def __str__(self):

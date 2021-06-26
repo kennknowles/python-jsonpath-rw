@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import unittest
+import json
 
 from jsonpath_rw import jsonpath # For setting the global auto_id_field flag
 
@@ -71,8 +72,6 @@ class TestDatumInContext(unittest.TestCase):
     #     assert AutoIdForDatum(DatumInContext(value=3, path=Fields('foo')),
     #                           id_field='id',
     #                           context=DatumInContext(value={'id': 'bizzle'}, path=This())).pseudopath == Fields('bizzle').child(Fields('foo'))
-                              
-                              
 
 class TestJsonPath(unittest.TestCase):
     """
@@ -81,7 +80,8 @@ class TestJsonPath(unittest.TestCase):
     
     @classmethod
     def setup_class(cls):
-        logging.basicConfig()
+        logging.basicConfig(format = '%(levelname)s:%(funcName)s:%(message)s',
+                            level = logging.DEBUG)
 
     #
     # Check that the data value returned is good
@@ -91,7 +91,7 @@ class TestJsonPath(unittest.TestCase):
         # Also, we coerce iterables, etc, into the desired target type
 
         for string, data, target in test_cases:
-            print('parse("%s").find(%s) =?= %s' % (string, data, target))
+            logging.debug('parse("%s").find(%s) =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
                 assert [r.value for r in result] == target
@@ -102,10 +102,12 @@ class TestJsonPath(unittest.TestCase):
 
     def test_fields_value(self):
         jsonpath.auto_id_field = None
-        self.check_cases([ ('foo', {'foo': 'baz'}, ['baz']),
-                           ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
-                           ('@foo', {'@foo': 1}, [1]),
-                           ('*', {'foo': 1, 'baz': 2}, set([1, 2])) ])
+        self.check_cases([
+            ('foo', {'foo': 'baz'}, ['baz']),
+            ('foo,baz', {'foo': 1, 'baz': 2}, [1, 2]),
+            ('@foo', {'@foo': 1}, [1]),
+            ('*', {'foo': 1, 'baz': 2}, set([1, 2]))
+        ])
 
         jsonpath.auto_id_field = 'id'
         self.check_cases([ ('*', {'foo': 1, 'baz': 2}, set([1, 2, '`this`'])) ])
@@ -159,6 +161,11 @@ class TestJsonPath(unittest.TestCase):
             ('foo..baz', {'foo': [{'baz': 1}, {'baz': 2}]}, [1, 2] ), 
         ])
 
+    def test_union_value(self):
+        self.check_cases([
+            ('foo | bar', {'foo': 1, 'bar': 2}, [1, 2])
+        ])
+
     def test_parent_value(self):
         self.check_cases([('foo.baz.`parent`', {'foo': {'baz': 3}}, [{'baz': 3}]),
                           ('foo.`parent`.foo.baz.`parent`.baz.bizzle', {'foo': {'baz': {'bizzle': 5}}}, [5])])
@@ -182,7 +189,7 @@ class TestJsonPath(unittest.TestCase):
         # Also, we coerce iterables, etc, into the desired target type
 
         for string, data, target in test_cases:
-            print('parse("%s").find(%s).paths =?= %s' % (string, data, target))
+            logging.debug('parse("%s").find(%s).paths =?= %s' % (string, data, target))
             result = parse(string).find(data)
             if isinstance(target, list):
                 assert [str(r.full_path) for r in result] == target
@@ -307,7 +314,7 @@ class TestJsonPath(unittest.TestCase):
 
     def check_update_cases(self, test_cases):
         for original, expr_str, value, expected in test_cases:
-            print('parse(%r).update(%r, %r) =?= %r'
+            logger.debug('parse(%r).update(%r, %r) =?= %r'
                   % (expr_str, original, value, expected))
             expr = parse(expr_str)
             actual = expr.update(original, value)
@@ -320,7 +327,10 @@ class TestJsonPath(unittest.TestCase):
 
     def test_update_this(self):
         self.check_update_cases([
-            ('foo', '`this`', 'bar', 'bar')
+            ('foo', '`this`', 'bar', 'bar'),
+            # TODO: fixme
+            # ({'foo': 'bar'}, 'foo.`this`', 'baz', {'foo': 'baz'}),
+            ({'foo': {'bar': 'baz'}}, 'foo.`this`.bar', 'foo', {'foo': {'bar': 'foo'}})
         ])
 
     def test_update_fields(self):
@@ -333,6 +343,11 @@ class TestJsonPath(unittest.TestCase):
         self.check_update_cases([
             ({'foo': 'bar'}, '$.foo', 'baz', {'foo': 'baz'}),
             ({'foo': {'bar': 1}}, 'foo.bar', 'baz', {'foo': {'bar': 'baz'}})
+        ])
+
+    def test_update_union(self):
+        self.check_update_cases([
+            ({'foo': 1, 'bar': 2}, 'foo | bar', 3, {'foo': 3, 'bar': 3})
         ])
 
     def test_update_where(self):
@@ -366,3 +381,200 @@ class TestJsonPath(unittest.TestCase):
         self.check_update_cases([
             (['foo', 'bar', 'baz'], '[0:2]', 'test', ['test', 'test', 'baz'])
         ])
+
+    def check_exclude_cases(self, test_cases):
+        for original, string, expected in test_cases:
+            logging.debug('parse("%s").exclude(%s) =?= %s' % (string, original, expected))
+            actual = parse(string).exclude(original)
+            assert actual == expected
+
+    def test_exclude_fields(self):
+        jsonpath.auto_id_field = None
+        self.check_exclude_cases([
+            ({'foo': 'baz'}, 'foo', {}),
+            ({'foo': 1, 'baz': 2}, 'foo', {'baz': 2}),
+            ({'foo': 1, 'baz': 2}, 'foo,baz', {}),
+            ({'@foo': 1}, '@foo', {}),
+            ({'@foo': 1, 'baz': 2}, '@foo', {'baz': 2}),
+            ({'foo': 1, 'baz': 2}, '*', {})
+        ])
+
+    def test_exclude_root(self):
+        self.check_exclude_cases([
+            ('foo', '$', None),
+        ])
+
+    def test_exclude_this(self):
+        self.check_exclude_cases([
+            ('foo', '`this`', None),
+            ({}, '`this`', None),
+            ({'foo': 1}, '`this`', None),
+            # TODO: fixme
+            #({'foo': 1}, 'foo.`this`', {}),
+            ({'foo': {'bar': 1}}, 'foo.`this`.bar', {'foo': {}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.`this`.bar', {'foo': {'baz': 2}})
+        ])
+
+    def test_exclude_child(self):
+        self.check_exclude_cases([
+            ({'foo': 'bar'}, '$.foo', {}),
+            ({'foo': 'bar'}, 'foo', {}),
+            ({'foo': {'bar': 1}}, 'foo.bar', {'foo': {}}),
+            ({'foo': {'bar': 1}}, 'foo.$.foo.bar', {'foo': {}})
+        ])
+
+    def test_exclude_where(self):
+        self.check_exclude_cases([
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where none', {'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}}),
+
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where baz', {'foo': {}, 'bar': {'baz': 2}})
+        ])
+
+    def test_exclude_descendants(self):
+        self.check_exclude_cases([
+            ({'somefield': 1}, '$..somefield', {}),
+            ({'outer': {'nestedfield': 1}}, '$..nestedfield', {'outer': {}}),
+            ({'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}},
+             '$..bar',
+             {'outs': {'ins': {}}, 'outs2': {}})
+        ])
+
+    def test_exclude_descendants_where(self):
+        self.check_exclude_cases([
+            ({'foo': {'bar': 1, 'flag': 1}, 'baz': {'bar': 2}},
+             '(* where flag) .. bar',
+             {'foo': {'flag': 1}, 'baz': {'bar': 2}})
+        ])
+
+    def test_exclude_union(self):
+        self.check_exclude_cases([
+            ({'foo': 1, 'bar': 2}, 'foo | bar', {}),
+            ({'foo': 1, 'bar': 2, 'baz': 3}, 'foo | bar', {'baz': 3}),
+        ])
+
+    def test_exclude_index(self):
+        self.check_exclude_cases([
+            ([42], '[0]', []),
+            ([42], '[5]', [42]),
+            ([34, 65, 29, 59], '[2]', [34, 65, 59]),
+            (None, '[0]', None),
+            ([], '[0]', []),
+            (['foo', 'bar', 'baz'], '[0]', ['bar', 'baz']),
+        ])
+
+    def test_exclude_slice(self):
+        self.check_exclude_cases([
+            (['foo', 'bar', 'baz'], '[0:2]', ['baz']),
+            (['foo', 'bar', 'baz'], '[0:1]', ['bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[0:]', []),
+            (['foo', 'bar', 'baz'], '[:2]', ['baz']),
+            (['foo', 'bar', 'baz'], '[:3]', [])
+        ])
+
+    def check_include_cases(self, test_cases):
+        for original, string, expected in test_cases:
+            logging.debug('parse("%s").include(%s) =?= %s' % (string, original, expected))
+            actual = parse(string).include(original)
+            assert actual == expected
+
+    def test_include_fields(self):
+        self.check_include_cases([
+            ({'foo': 'baz'}, 'foo', {'foo': 'baz'}),
+            ({'foo': 1, 'baz': 2}, 'foo', {'foo': 1}),
+            ({'foo': 1, 'baz': 2}, 'foo,baz', {'foo': 1, 'baz': 2}),
+            ({'@foo': 1}, '@foo', {'@foo': 1}),
+            ({'@foo': 1, 'baz': 2}, '@foo', {'@foo': 1}),
+            ({'foo': 1, 'baz': 2}, '*', {'foo': 1, 'baz': 2}),
+        ])
+
+    def test_include_index(self):
+        self.check_include_cases([
+            ([42], '[0]', [42]),
+            ([42], '[5]', []),
+            ([34, 65, 29, 59], '[2]', [29]),
+            (None, '[0]', None),
+            ([], '[0]', []),
+            (['foo', 'bar', 'baz'], '[0]', ['foo']),
+        ])
+
+    def test_include_slice(self):
+        self.check_include_cases([
+            (['foo', 'bar', 'baz'], '[0:2]', ['foo', 'bar']),
+            (['foo', 'bar', 'baz'], '[0:1]', ['foo']),
+            (['foo', 'bar', 'baz'], '[0:]', ['foo', 'bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[:2]', ['foo', 'bar']),
+            (['foo', 'bar', 'baz'], '[:3]', ['foo', 'bar', 'baz']),
+            (['foo', 'bar', 'baz'], '[0:0]', []),
+        ])
+
+    def test_include_root(self):
+        self.check_include_cases([
+            ('foo', '$', 'foo'),
+            ({}, '$', {}),
+            ({'foo': 1}, '$', {'foo': 1})
+        ])
+
+    def test_include_this(self):
+        self.check_include_cases([
+            ('foo', '`this`', 'foo'),
+            ({}, '`this`', {}),
+            ({'foo': 1}, '`this`', {'foo': 1}),
+            # TODO: fixme
+            #({'foo': 1}, 'foo.`this`', {}),
+            ({'foo': {'bar': 1}}, 'foo.`this`.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.`this`.bar', {'foo': {'bar': 1}})
+        ])
+
+    def test_include_child(self):
+        self.check_include_cases([
+            ({'foo': 'bar'}, '$.foo', {'foo': 'bar'}),
+            ({'foo': 'bar'}, 'foo', {'foo': 'bar'}),
+            ({'foo': {'bar': 1}}, 'foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1}}, 'foo.$.foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'foo.$.foo.bar', {'foo': {'bar': 1}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, '*', {'foo': {'bar': 1, 'baz': 2}}),
+            ({'foo': {'bar': 1, 'baz': 2}}, 'non', {}),
+        ])
+
+    def test_exclude_not_exists(self):
+        self.check_exclude_cases([
+            (
+                {
+                    'foo': [
+                        {'bar': 'bar'},
+                        {'baz': None}
+                    ]
+                },
+                'foo.[*].baz.not_exist_key',
+                {
+                    'foo': [
+                        {'bar': 'bar'},
+                        {'baz': None}
+                    ]
+                },
+             ),
+        ])
+
+    """
+    def test_include_where(self):
+        self.check_include_cases([
+            #({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+            # '*.bar where none', {}),
+
+            ({'foo': {'bar': {'baz': 1}}, 'bar': {'baz': 2}},
+             '*.bar where baz', {'foo': {'bar': {'baz': 1}}})
+        ])
+    """
+
+    """
+    def test_include_descendants(self):
+        self.check_include_cases([
+            ({'somefield': 1}, '$..somefield', {'somefield': 1}),
+            ({'outer': {'nestedfield': 1}}, '$..nestedfield', {'outer': {'nestedfield': 1}}),
+            ({'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}},
+             '$..bar',
+             {'outs': {'bar': 1, 'ins': {'bar': 9}}, 'outs2': {'bar': 2}})
+        ])
+    """

@@ -16,3 +16,8 @@ parser.out
 /jsonpath_rw/VERSION
 
 .idea
+
+venv
+.eggs
+coverage.xml
+htmlcov

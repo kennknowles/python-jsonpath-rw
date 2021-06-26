@@ -10,13 +10,14 @@ class TestParser(unittest.TestCase):
 
     @classmethod
     def setup_class(cls):
-        logging.basicConfig()
+        logging.basicConfig(format = '%(levelname)s:%(funcName)s:%(message)s',
+                            level = logging.DEBUG)
 
     def check_parse_cases(self, test_cases):
         parser = JsonPathParser(debug=True, lexer_class=lambda:JsonPathLexer(debug=False)) # Note that just manually passing token streams avoids this dep, but that sucks
 
         for string, parsed in test_cases:
-            print(string, '=?=', parsed) # pytest captures this and we see it only on a failure, for debugging
+            logging.debug(string, '=?=', parsed) # pytest captures this and we see it only on a failure, for debugging
             assert parser.parse(string) == parsed
 
     def test_atomic(self):
@@ -36,5 +37,7 @@ class TestParser(unittest.TestCase):
         self.check_parse_cases([('foo.baz', Child(Fields('foo'), Fields('baz'))),
                                 ('foo.baz,bizzle', Child(Fields('foo'), Fields('baz', 'bizzle'))),
                                 ('foo where baz', Where(Fields('foo'), Fields('baz'))),
+                                ('`this`', This()),
+                                ('foo.`this`', Child(Fields('foo'), This())),
                                 ('foo..baz', Descendants(Fields('foo'), Fields('baz'))),
                                 ('foo..baz.bing', Descendants(Fields('foo'), Child(Fields('baz'), Fields('bing'))))])
