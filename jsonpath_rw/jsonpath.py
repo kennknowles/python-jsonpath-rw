@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function, absolute_import, division, generators, nested_scopes
 import logging
+import re
 import six
 from six.moves import xrange
 from itertools import *
@@ -462,7 +463,15 @@ class Fields(JSONPath):
         return data
 
     def __str__(self):
-        return ','.join(map(str, self.fields))
+        def quote_field(field):
+            field = str(field)
+            # Numeric fields also represent auto-generated ids.
+            if field == '*' or re.match(r'-?\d+\Z', field) or (field != 'where' and
+                                re.match(r'[a-zA-Z_@][a-zA-Z0-9_@\-]*\Z', field)):
+                return field
+            return "'" + field.replace('\\', '\\\\').replace("'", "\\'") + "'"
+
+        return ','.join(quote_field(field) for field in self.fields)
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
