@@ -321,7 +321,7 @@ class Descendants(JSONPath):
             right_matches = self.right.find(datum)
 
             # Manually do the * or [*] to avoid coercion and recurse just the right-hand pattern
-            if isinstance(datum.value, list):
+            if isinstance(datum.value, (list, tuple)):
                 recursive_matches = [submatch
                                      for i in range(0, len(datum.value))
                                      for submatch in match_recursively(DatumInContext(datum.value[i], context=datum, path=Index(i)))]
