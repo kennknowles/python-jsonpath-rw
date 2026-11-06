@@ -518,7 +518,7 @@ class Slice(JSONPath):
     Because of a mismatch between JSON and XML when schema-unaware,
     this always returns an iterable; if the incoming data
     was not a list, then it returns a one element list _containing_ that
-    data.
+    data. A null value yields no matches.
 
     Consider these two docs, and their schema-unaware translation to JSON:
     
@@ -543,6 +543,9 @@ class Slice(JSONPath):
     def find(self, datum):
         datum = DatumInContext.wrap(datum)
         
+        if datum.value is None:
+            return []
+
         # Here's the hack. If it is a dictionary or some kind of constant,
         # put it in a single-element list
         if (isinstance(datum.value, dict) or isinstance(datum.value, six.integer_types) or isinstance(datum.value, six.string_types)):
