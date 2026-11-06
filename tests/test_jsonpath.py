@@ -138,7 +138,8 @@ class TestJsonPath(unittest.TestCase):
         self.check_cases([('[*]', [1, 2, 3], [1, 2, 3]),
                           ('[*]', xrange(1, 4), [1, 2, 3]),
                           ('[1:]', [1, 2, 3, 4], [2, 3, 4]),
-                          ('[:2]', [1, 2, 3, 4], [1, 2])])
+                          ('[:2]', [1, 2, 3, 4], [1, 2]),
+                          ('[*]', None, [])])
 
         # Funky slice hacks
         self.check_cases([
